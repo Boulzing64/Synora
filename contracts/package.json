@@ -9,7 +9,8 @@
                     "test":  "hardhat test",
                     "clean":  "hardhat clean",
                     "deploy:local":  "hardhat ignition deploy ./ignition/modules/SYNORA.ts",
-                    "deploy:base-sepolia":  "hardhat ignition deploy ./ignition/modules/SYNORA.ts --network baseSepolia"
+                    "deploy:base-sepolia":  "hardhat ignition deploy ./ignition/modules/SYNORA.ts --network baseSepolia",
+                    "deploy:rewards:base-sepolia":  "hardhat ignition deploy ./ignition/modules/RewardsDistributor.ts --network baseSepolia --parameters ./ignition/parameters/base-sepolia-rewards.json"
                 },
     "devDependencies":  {
                             "@nomicfoundation/hardhat-toolbox-viem":  "^5.0.7",
