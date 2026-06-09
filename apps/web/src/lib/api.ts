@@ -145,3 +145,19 @@ export type RewardClaimResponse = {
 export function claimSynoraReward(token: string) {
   return postJson<RewardClaimResponse>("/rewards/claim", {}, token);
 }
+export type RewardAuthorization = {
+  rewardId: string;
+  walletAddress: string;
+  amount: string;
+  signature: string;
+  verifyingContract: string;
+  chainId: number;
+};
+
+export type RewardAuthorizationResponse = {
+  authorization: RewardAuthorization;
+};
+
+export function requestRewardAuthorization(token: string) {
+  return postJson<RewardAuthorizationResponse>("/rewards/authorize", {}, token);
+}

@@ -11,6 +11,7 @@ import { z } from "zod";
 import { buildAuthMessage } from "./auth/messages.js";
 import { logger } from "./observability/logger.js";
 import { buildReputationProfile } from "./reputation/engine.js";
+import { createRewardAuthorization } from "./rewards/authorization.js";
 import {
   canClaimMvpReward,
   createMvpRewardClaim,
@@ -402,6 +403,64 @@ export function createSynoraApp() {
     });
   });
 
+  app.post("/rewards/authorize", rewardClaimRateLimit, async (request, response) => {
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const eventsBeforeAuthorization = await getWalletEvents(authenticatedWallet);
+    const profileBeforeAuthorization = buildReputationProfile({
+      walletAddress: authenticatedWallet,
+      events: eventsBeforeAuthorization,
+    });
+
+    if (profileBeforeAuthorization.score < 60) {
+      return response.status(403).json({
+        error: "REWARD_SCORE_TOO_LOW",
+      });
+    }
+
+    const claimEligibility = await canClaimMvpReward(authenticatedWallet);
+
+    if (!claimEligibility.allowed) {
+      return response.status(409).json({
+        error: claimEligibility.reason ?? "REWARD_NOT_ALLOWED",
+      });
+    }
+
+    const rewardId = crypto.randomBytes(32).toString("hex");
+    const normalizedRewardId = `0x${rewardId}`;
+
+    try {
+      const authorization = await createRewardAuthorization({
+        rewardId: normalizedRewardId,
+        walletAddress: authenticatedWallet,
+        amountSyn: 10,
+      });
+
+      logger.info("rewards.authorization.created", {
+        walletAddress: authenticatedWallet,
+        rewardId: normalizedRewardId,
+      });
+
+      return response.json({
+        authorization,
+      });
+    } catch (error) {
+      logger.error("rewards.authorization.failed", {
+        walletAddress: authenticatedWallet,
+        message: error instanceof Error ? error.message : "UNKNOWN_ERROR",
+      });
+
+      return response.status(503).json({
+        error: "REWARDS_AUTHORIZATION_NOT_CONFIGURED",
+      });
+    }
+  });
   app.post("/rewards/claim", rewardClaimRateLimit, async (request, response) => {
     const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 

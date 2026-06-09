@@ -8,6 +8,10 @@ import { initializeDatabase } from "../storage/repositories.js";
 
 process.env.JWT_SECRET = "synora_test_secret_minimum_32_characters";
 process.env.WEB_ORIGIN = "http://localhost:3000";
+process.env.REWARDS_SIGNER_PRIVATE_KEY =
+  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+process.env.REWARDS_DISTRIBUTOR_ADDRESS = "0x0000000000000000000000000000000000000001";
+process.env.REWARDS_CHAIN_ID = "84532";
 delete process.env.DATABASE_URL;
 
 const app = createSynoraApp();
@@ -84,7 +88,6 @@ const reputationResponse = await request(app)
 assert.equal(reputationResponse.body.reputation.walletAddress, account.address);
 assert.ok(reputationResponse.body.reputation.eventsCount >= 3);
 
-console.log("SYNORA API HTTP tests passed.");
 const eventsResponse = await request(app)
   .get(`/reputation/${account.address}/events`)
   .expect(200);
@@ -92,16 +95,17 @@ const eventsResponse = await request(app)
 assert.equal(eventsResponse.body.walletAddress, account.address);
 assert.ok(Array.isArray(eventsResponse.body.events));
 assert.ok(eventsResponse.body.events.length > 0);
-const rewardClaimResponse = await request(app)
-  .post("/reputation/event")
+
+const rewardAuthorizationResponse = await request(app)
+  .post("/rewards/authorize")
   .set("Authorization", `Bearer ${token}`)
-  .send({
-    type: "REWARD_CLAIMED",
-  })
+  .send({})
   .expect(200);
 
-assert.equal(rewardClaimResponse.body.reputation.walletAddress, account.address);
-assert.ok(rewardClaimResponse.body.reputation.rewardsClaimed >= 1);
+assert.equal(rewardAuthorizationResponse.body.authorization.walletAddress, account.address);
+assert.equal(rewardAuthorizationResponse.body.authorization.chainId, 84532);
+assert.match(rewardAuthorizationResponse.body.authorization.signature, /^0x[a-fA-F0-9]+$/);
+
 const dedicatedRewardClaimResponse = await request(app)
   .post("/rewards/claim")
   .set("Authorization", `Bearer ${token}`)
@@ -117,3 +121,5 @@ await request(app)
   .set("Authorization", `Bearer ${token}`)
   .send({})
   .expect(409);
+
+console.log("SYNORA API HTTP tests passed.");
