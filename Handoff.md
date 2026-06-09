@@ -84,14 +84,41 @@ Dernieres corrections importantes:
 - Pas encore de gouvernance DAO
 - Pas encore de monitoring externe
 
-## Prochaine etape recommandee
+## Rewards On-chain validé
 
-Brancher le claim reward on-chain dans le dashboard:
+- RewardsDistributor déployé sur Base Sepolia
+- RewardsDistributor financé avec 1000 SYN
+- Endpoint API actif: POST /rewards/authorize
+- Signature EIP-712 backend fonctionnelle
+- Frontend connecté à claimWithSignature
+- Transaction MetaMask validée
+- Transfert SYN on-chain confirmé
+- Flux rewards on-chain SYNORA validé de bout en bout
 
-1. Appeler POST /rewards/authorize
-2. Recuperer rewardId, amount, signature
-3. Appeler claimWithSignature sur RewardsDistributor
-4. Attendre la transaction MetaMask
-5. Afficher le hash de transaction
-6. Verifier la balance SYN utilisateur apres claim
-7. Garder /rewards/claim comme fallback off-chain
+## Boucle Web3 complète validée
+
+Utilisateur:
+
+1. Connecte MetaMask
+2. Signe le message d'authentification
+3. Reçoit un JWT
+4. Charge sa réputation
+5. Demande une autorisation rewards
+6. Signe la transaction MetaMask
+7. Appelle RewardsDistributor.claimWithSignature
+8. Reçoit des SYN on-chain
+
+## Etat milestone
+
+SYNORA MVP Beta dispose maintenant de:
+
+- Token ERC-20
+- Auth wallet
+- Réputation
+- PostgreSQL
+- Dashboard
+- Rewards off-chain
+- Rewards on-chain
+- EIP-712
+- Smart contract distributor
+- Déploiement cloud complet
