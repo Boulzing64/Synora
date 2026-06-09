@@ -47,7 +47,6 @@ export function WalletAuthCard() {
     }
 
     const token = savedToken;
-
     let isMounted = true;
 
     async function restoreSession() {
@@ -108,9 +107,22 @@ export function WalletAuthCard() {
     return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
   }, [walletAddress]);
 
+  const canClaimReward = Boolean(authToken && user && user.score >= 60);
+
   async function refreshEvents(currentWalletAddress: string) {
     const eventsResponse = await getReputationEvents(currentWalletAddress);
     setEvents(eventsResponse.events);
+  }
+
+  function applyReputationProfile(profile: SynoraReputationProfile) {
+    setUser({
+      walletAddress: profile.walletAddress,
+      score: profile.score,
+      level: profile.level,
+      rewardsClaimed: profile.rewardsClaimed,
+    });
+
+    setReputation(profile);
   }
 
   async function ensureBaseSepoliaNetwork() {
@@ -221,14 +233,7 @@ export function WalletAuthCard() {
         verifyResponse.token
       );
 
-      setUser({
-        walletAddress: reputationResponse.reputation.walletAddress,
-        score: reputationResponse.reputation.score,
-        level: reputationResponse.reputation.level,
-        rewardsClaimed: reputationResponse.reputation.rewardsClaimed,
-      });
-
-      setReputation(reputationResponse.reputation);
+      applyReputationProfile(reputationResponse.reputation);
       await refreshEvents(connectedWallet);
       setStatus("Authentifié avec succès");
     } catch (caughtError) {
@@ -272,6 +277,46 @@ export function WalletAuthCard() {
     }
   }
 
+  async function claimReward() {
+    if (!walletAddress || !authToken) {
+      setError("Connecte et authentifie ton wallet avant de réclamer une récompense.");
+      return;
+    }
+
+    if (!canClaimReward) {
+      setError("Score insuffisant pour réclamer une récompense MVP.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      setStatus("Claim récompense MVP...");
+
+      const reputationResponse = await reportReputationEvent(
+        {
+          type: "REWARD_CLAIMED",
+        },
+        authToken
+      );
+
+      applyReputationProfile(reputationResponse.reputation);
+      await refreshEvents(walletAddress);
+      setStatus("Récompense MVP enregistrée");
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Erreur inconnue pendant le claim récompense.";
+
+      setError(message);
+      setStatus("Échec claim récompense");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   function disconnect() {
     setWalletAddress("");
     setAuthToken("");
@@ -295,8 +340,8 @@ export function WalletAuthCard() {
           <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et réputation</h2>
 
           <p className="mt-3 text-slate-300">
-            SYNORA lit la balance SYN, authentifie le wallet et affiche l’historique récent
-            des événements de réputation.
+            SYNORA lit la balance SYN, authentifie le wallet, affiche l’historique récent
+            et permet un claim de récompense MVP off-chain.
           </p>
         </div>
 
@@ -384,7 +429,7 @@ export function WalletAuthCard() {
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             onClick={connectAndAuthenticate}
@@ -405,12 +450,26 @@ export function WalletAuthCard() {
 
           <button
             type="button"
+            onClick={claimReward}
+            disabled={isLoading || !canClaimReward}
+            className="rounded-2xl border border-cyan-500 px-5 py-3 font-bold text-cyan-200 transition hover:bg-cyan-950 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Claim récompense MVP
+          </button>
+
+          <button
+            type="button"
             onClick={disconnect}
             className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
           >
             Réinitialiser
           </button>
         </div>
+
+        <p className="text-sm text-slate-400">
+          Condition MVP claim : session authentifiée et score supérieur ou égal à 60.
+          Ce claim est off-chain et sert à valider le parcours récompense avant un contrat rewards.
+        </p>
       </div>
     </section>
   );

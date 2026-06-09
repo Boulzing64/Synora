@@ -90,3 +90,13 @@ const eventsResponse = await request(app)
 assert.equal(eventsResponse.body.walletAddress, account.address);
 assert.ok(Array.isArray(eventsResponse.body.events));
 assert.ok(eventsResponse.body.events.length > 0);
+const rewardClaimResponse = await request(app)
+  .post("/reputation/event")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    type: "REWARD_CLAIMED",
+  })
+  .expect(200);
+
+assert.equal(rewardClaimResponse.body.reputation.walletAddress, account.address);
+assert.ok(rewardClaimResponse.body.reputation.rewardsClaimed >= 1);
