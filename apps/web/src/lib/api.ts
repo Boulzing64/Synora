@@ -7,6 +7,11 @@ export type SynoraUser = {
   rewardsClaimed: number;
 };
 
+export type SynoraReputationProfile = SynoraUser & {
+  eventsCount: number;
+  updatedAt: string;
+};
+
 export type AuthNonceResponse = {
   walletAddress: string;
   nonce: string;
@@ -17,13 +22,32 @@ export type AuthNonceResponse = {
 export type AuthVerifyResponse = {
   token: string;
   user: SynoraUser;
+  reputation: SynoraReputationProfile;
 };
 
-async function postJson<TResponse>(path: string, body: unknown): Promise<TResponse> {
+export type ReputationEventType =
+  | "DASHBOARD_VISITED"
+  | "SYN_BALANCE_CONNECTED"
+  | "REWARD_CLAIMED";
+
+export type ReputationEventResponse = {
+  reputation: SynoraReputationProfile;
+};
+
+async function postJson<TResponse>(
+  path: string,
+  body: unknown,
+  token?: string
+): Promise<TResponse> {
   const response = await fetch(`${API_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {}),
     },
     body: JSON.stringify(body),
   });
@@ -47,4 +71,14 @@ export function verifyAuthSignature(params: {
   signature: string;
 }) {
   return postJson<AuthVerifyResponse>("/auth/verify", params);
+}
+
+export function reportReputationEvent(
+  params: {
+    type: ReputationEventType;
+    value?: number;
+  },
+  token: string
+) {
+  return postJson<ReputationEventResponse>("/reputation/event", params, token);
 }

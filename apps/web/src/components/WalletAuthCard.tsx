@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 
 import {
+  reportReputationEvent,
   requestAuthNonce,
+  type SynoraReputationProfile,
   type SynoraUser,
   verifyAuthSignature,
 } from "@/lib/api";
@@ -18,6 +20,7 @@ export function WalletAuthCard() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [authToken, setAuthToken] = useState<string>("");
   const [user, setUser] = useState<SynoraUser | null>(null);
+  const [reputation, setReputation] = useState<SynoraReputationProfile | null>(null);
   const [synBalance, setSynBalance] = useState<string>("0");
   const [status, setStatus] = useState<string>("Wallet non connecté");
   const [error, setError] = useState<string>("");
@@ -126,6 +129,24 @@ export function WalletAuthCard() {
 
       setAuthToken(verifyResponse.token);
       setUser(verifyResponse.user);
+      setReputation(verifyResponse.reputation);
+
+      setStatus("Mise à jour de la réputation...");
+
+      const reputationResponse = await reportReputationEvent(
+        {
+          type: "SYN_BALANCE_CONNECTED",
+        },
+        verifyResponse.token
+      );
+
+      setUser({
+        walletAddress: reputationResponse.reputation.walletAddress,
+        score: reputationResponse.reputation.score,
+        level: reputationResponse.reputation.level,
+        rewardsClaimed: reputationResponse.reputation.rewardsClaimed,
+      });
+      setReputation(reputationResponse.reputation);
       setStatus("Authentifié avec succès");
     } catch (caughtError) {
       const message =
@@ -171,6 +192,7 @@ export function WalletAuthCard() {
     setWalletAddress("");
     setAuthToken("");
     setUser(null);
+    setReputation(null);
     setSynBalance("0");
     setStatus("Wallet non connecté");
     setError("");
@@ -187,8 +209,8 @@ export function WalletAuthCard() {
           <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et réputation</h2>
 
           <p className="mt-3 text-slate-300">
-            SYNORA lit la balance SYN sur Base Sepolia, puis authentifie le wallet avec une
-            signature hors-chain sans frais de gas.
+            SYNORA lit la balance SYN sur Base Sepolia, authentifie le wallet par signature,
+            puis met à jour le score de réputation via l’API.
           </p>
         </div>
 
@@ -217,7 +239,7 @@ export function WalletAuthCard() {
         </div>
 
         {user ? (
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
               <p className="text-sm text-slate-400">Score</p>
               <p className="mt-2 text-3xl font-bold">{user.score}</p>
@@ -232,6 +254,18 @@ export function WalletAuthCard() {
               <p className="text-sm text-slate-400">Récompenses</p>
               <p className="mt-2 text-3xl font-bold">{user.rewardsClaimed}</p>
             </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+              <p className="text-sm text-slate-400">Événements</p>
+              <p className="mt-2 text-3xl font-bold">{reputation?.eventsCount ?? 0}</p>
+            </div>
+          </div>
+        ) : null}
+
+        {reputation ? (
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300">
+            Dernière mise à jour réputation :{" "}
+            <span className="font-mono text-cyan-300">{reputation.updatedAt}</span>
           </div>
         ) : null}
 

@@ -2,7 +2,7 @@ import { config } from "dotenv";
 import crypto from "node:crypto";
 import cors from "cors";
 import express from "express";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import { getAddress, isAddress, verifyMessage } from "viem";
 import { z } from "zod";
 
@@ -18,12 +18,17 @@ config({ path: ".env.local" });
 const app = express();
 
 const apiPort = Number(process.env.API_PORT ?? 4000);
-const jwtSecret = process.env.JWT_SECRET;
+const jwtSecret = process.env.JWT_SECRET ?? "";
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
 
 if (!jwtSecret || jwtSecret.length < 32) {
   throw new Error("JWT_SECRET manquant ou trop court. Minimum recommande: 32 caracteres.");
 }
+
+const jwtOptions = {
+  issuer: "synora-api",
+  audience: "synora-web",
+} as const;
 
 const nonceStore = new Map<
   string,
@@ -55,6 +60,28 @@ function addWalletEvent(walletAddress: string, event: ReputationEvent) {
   reputationEventsStore.set(walletAddress, events);
 
   return events;
+}
+
+function getAuthenticatedWallet(authorizationHeader: string | undefined) {
+  if (!authorizationHeader?.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authorizationHeader.slice("Bearer ".length);
+
+  try {
+    const payload = jwt.verify(token, jwtSecret, jwtOptions) as JwtPayload & {
+      walletAddress?: string;
+    };
+
+    if (!payload.walletAddress || !isAddress(payload.walletAddress)) {
+      return null;
+    }
+
+    return getAddress(payload.walletAddress);
+  } catch {
+    return null;
+  }
 }
 
 app.use(
@@ -186,8 +213,7 @@ app.post("/auth/verify", async (request, response) => {
     jwtSecret,
     {
       expiresIn: "1h",
-      issuer: "synora-api",
-      audience: "synora-web",
+      ...jwtOptions,
     }
   );
 
@@ -204,30 +230,19 @@ app.post("/auth/verify", async (request, response) => {
 });
 
 app.get("/auth/me", (request, response) => {
-  const authorization = request.headers.authorization;
+  const walletAddress = getAuthenticatedWallet(request.headers.authorization);
 
-  if (!authorization?.startsWith("Bearer ")) {
-    return response.status(401).json({
-      error: "MISSING_TOKEN",
-    });
-  }
-
-  const token = authorization.slice("Bearer ".length);
-
-  try {
-    const payload = jwt.verify(token, jwtSecret, {
-      issuer: "synora-api",
-      audience: "synora-web",
-    });
-
-    return response.json({
-      user: payload,
-    });
-  } catch {
+  if (!walletAddress) {
     return response.status(401).json({
       error: "INVALID_TOKEN",
     });
   }
+
+  return response.json({
+    user: {
+      walletAddress,
+    },
+  });
 });
 
 app.get("/reputation/:walletAddress", (request, response) => {
@@ -251,11 +266,16 @@ app.get("/reputation/:walletAddress", (request, response) => {
 });
 
 app.post("/reputation/event", (request, response) => {
+  const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
+
+  if (!authenticatedWallet) {
+    return response.status(401).json({
+      error: "INVALID_TOKEN",
+    });
+  }
+
   const schema = z.object({
-    walletAddress: z.string(),
     type: z.enum([
-      "PROFILE_CREATED",
-      "WALLET_AUTHENTICATED",
       "DASHBOARD_VISITED",
       "SYN_BALANCE_CONNECTED",
       "REWARD_CLAIMED",
@@ -265,15 +285,13 @@ app.post("/reputation/event", (request, response) => {
 
   const parsed = schema.safeParse(request.body);
 
-  if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+  if (!parsed.success) {
     return response.status(400).json({
       error: "INVALID_REPUTATION_EVENT",
     });
   }
 
-  const walletAddress = getAddress(parsed.data.walletAddress);
-
-  const events = addWalletEvent(walletAddress, {
+  const events = addWalletEvent(authenticatedWallet, {
     type: parsed.data.type,
     value: parsed.data.value,
     createdAt: new Date().toISOString(),
@@ -281,7 +299,7 @@ app.post("/reputation/event", (request, response) => {
 
   return response.json({
     reputation: buildReputationProfile({
-      walletAddress,
+      walletAddress: authenticatedWallet,
       events,
     }),
   });
