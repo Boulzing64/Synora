@@ -16,6 +16,63 @@ type AuthNonceEntry = {
   expiresAt: number;
 };
 
+type Migration = {
+  version: string;
+  name: string;
+  sql: string;
+};
+
+const MIGRATIONS: Migration[] = [
+  {
+    version: "001",
+    name: "create_users",
+    sql: `
+      CREATE TABLE IF NOT EXISTS users (
+        wallet_address TEXT PRIMARY KEY,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `,
+  },
+  {
+    version: "002",
+    name: "create_auth_nonces",
+    sql: `
+      CREATE TABLE IF NOT EXISTS auth_nonces (
+        wallet_address TEXT PRIMARY KEY REFERENCES users(wallet_address) ON DELETE CASCADE,
+        nonce TEXT NOT NULL,
+        issued_at TIMESTAMPTZ NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `,
+  },
+  {
+    version: "003",
+    name: "create_reputation_events",
+    sql: `
+      CREATE TABLE IF NOT EXISTS reputation_events (
+        id BIGSERIAL PRIMARY KEY,
+        wallet_address TEXT NOT NULL REFERENCES users(wallet_address) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        value INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `,
+  },
+  {
+    version: "004",
+    name: "create_reputation_indexes",
+    sql: `
+      CREATE INDEX IF NOT EXISTS idx_reputation_events_wallet_created
+        ON reputation_events(wallet_address, created_at);
+
+      CREATE INDEX IF NOT EXISTS idx_auth_nonces_expires_at
+        ON auth_nonces(expires_at);
+    `,
+  },
+];
+
 const memoryNonceStore = new Map<string, AuthNonceEntry>();
 const memoryReputationEventsStore = new Map<string, ReputationEvent[]>();
 
@@ -49,6 +106,54 @@ function getPool() {
   return pool;
 }
 
+async function runMigrations(databasePool: PgPool) {
+  await databasePool.query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  for (const migration of MIGRATIONS) {
+    const existingMigration = await databasePool.query(
+      `
+        SELECT version
+        FROM schema_migrations
+        WHERE version = $1
+        LIMIT 1
+      `,
+      [migration.version]
+    );
+
+    if (existingMigration.rows.length > 0) {
+      continue;
+    }
+
+    const client = await databasePool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(migration.sql);
+      await client.query(
+        `
+          INSERT INTO schema_migrations(version, name)
+          VALUES ($1, $2)
+        `,
+        [migration.version, migration.name]
+      );
+      await client.query("COMMIT");
+
+      console.log(`Migration ${migration.version}_${migration.name} applied.`);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}
+
 export async function initializeDatabase() {
   const databasePool = getPool();
 
@@ -57,32 +162,7 @@ export async function initializeDatabase() {
     return;
   }
 
-  await databasePool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      wallet_address TEXT PRIMARY KEY,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS auth_nonces (
-      wallet_address TEXT PRIMARY KEY REFERENCES users(wallet_address) ON DELETE CASCADE,
-      nonce TEXT NOT NULL,
-      issued_at TIMESTAMPTZ NOT NULL,
-      expires_at TIMESTAMPTZ NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS reputation_events (
-      id BIGSERIAL PRIMARY KEY,
-      wallet_address TEXT NOT NULL REFERENCES users(wallet_address) ON DELETE CASCADE,
-      type TEXT NOT NULL,
-      value INTEGER,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_reputation_events_wallet_created
-      ON reputation_events(wallet_address, created_at);
-  `);
+  await runMigrations(databasePool);
 
   console.log("SYNORA PostgreSQL storage initialized.");
 }
