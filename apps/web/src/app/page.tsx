@@ -1,3 +1,5 @@
+import { WalletAuthCard } from "@/components/WalletAuthCard";
+
 export default function Home() {
   const tokenAddress = process.env.NEXT_PUBLIC_SYN_TOKEN_ADDRESS ?? "Non configuré";
   const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ?? "Non configuré";
@@ -15,8 +17,8 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg text-slate-300">
-            Le frontend SYNORA est initialisé. La prochaine étape ajoutera la connexion wallet,
-            l’authentification par signature et la lecture du token SYN sur Base Sepolia.
+            Connecte ton wallet MetaMask, signe un message hors-chain et récupère ton profil
+            SYNORA depuis l’API.
           </p>
         </div>
 
@@ -33,9 +35,11 @@ export default function Home() {
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <p className="text-sm text-slate-400">Token</p>
-            <p className="mt-2 break-all text-sm font-mono text-cyan-300">{tokenAddress}</p>
+            <p className="mt-2 break-all font-mono text-sm text-cyan-300">{tokenAddress}</p>
           </div>
         </div>
+
+        <WalletAuthCard />
       </section>
     </main>
   );
