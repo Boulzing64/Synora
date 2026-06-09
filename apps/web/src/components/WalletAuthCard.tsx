@@ -49,7 +49,7 @@ export function WalletAuthCard() {
   const [reputation, setReputation] = useState<SynoraReputationProfile | null>(null);
   const [events, setEvents] = useState<SynoraReputationEvent[]>([]);
   const [synBalance, setSynBalance] = useState<string>("0");
-  const [status, setStatus] = useState<string>("Wallet non connectÃƒÂ©");
+  const [status, setStatus] = useState<string>("Wallet non connectÃƒÆ'Ã†a€™Ãƒa€š©");
   const [error, setError] = useState<string>("");
   const [rewardAuthorizationStatus, setRewardAuthorizationStatus] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -97,12 +97,12 @@ export function WalletAuthCard() {
           }
         }
 
-        setStatus("Session restaurÃƒÂ©e");
+        setStatus("Session restaurÃƒÆ'Ã†a€™Ãƒa€š©e");
       } catch {
         window.localStorage.removeItem(SESSION_STORAGE_KEY);
 
         if (isMounted) {
-          setStatus("Wallet non connectÃƒÂ©");
+          setStatus("Wallet non connectÃƒÆ'Ã†a€™Ãƒa€š©");
         }
       }
     }
@@ -116,7 +116,7 @@ export function WalletAuthCard() {
 
   const shortWallet = useMemo(() => {
     if (!walletAddress) {
-      return "Non connectÃƒÂ©";
+      return "Non connectÃƒÆ'Ã†a€™Ãƒa€š©";
     }
 
     return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
@@ -194,7 +194,7 @@ export function WalletAuthCard() {
         throw new Error("MetaMask est introuvable.");
       }
 
-      setStatus("Connexion au rÃƒÂ©seau Base Sepolia...");
+      setStatus("Connexion au rÃƒÆ'Ã†a€™Ãƒa€š©seau Base Sepolia...");
       await ensureBaseSepoliaNetwork();
 
       setStatus("Connexion au wallet...");
@@ -206,7 +206,7 @@ export function WalletAuthCard() {
       const connectedWallet = accounts[0];
 
       if (!connectedWallet) {
-        throw new Error("Aucun wallet connectÃƒÂ©.");
+        throw new Error("Aucun wallet connectÃƒÆ'Ã†a€™Ãƒa€š©.");
       }
 
       setWalletAddress(connectedWallet);
@@ -215,7 +215,7 @@ export function WalletAuthCard() {
       const balance = await getSynBalance(connectedWallet);
       setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
 
-      setStatus("CrÃƒÂ©ation du message de signature...");
+      setStatus("CrÃƒÆ'Ã†a€™Ãƒa€š©ation du message de signature...");
 
       const nonceResponse = await requestAuthNonce(connectedWallet);
 
@@ -226,7 +226,7 @@ export function WalletAuthCard() {
         params: [nonceResponse.message, connectedWallet],
       });
 
-      setStatus("VÃƒÂ©rification de la signature...");
+      setStatus("VÃƒÆ'Ã†a€™Ãƒa€š©rification de la signature...");
 
       const verifyResponse = await verifyAuthSignature({
         walletAddress: connectedWallet,
@@ -239,7 +239,7 @@ export function WalletAuthCard() {
       setUser(verifyResponse.user);
       setReputation(verifyResponse.reputation);
 
-      setStatus("Mise ÃƒÂ  jour de la rÃƒÂ©putation...");
+      setStatus("Mise ÃƒÆ'Ã†a€™Ãƒa€š  jour de la rÃƒÆ'Ã†a€™Ãƒa€š©putation...");
 
       const reputationResponse = await reportReputationEvent(
         {
@@ -250,7 +250,7 @@ export function WalletAuthCard() {
 
       applyReputationProfile(reputationResponse.reputation);
       await refreshEvents(connectedWallet);
-      setStatus("AuthentifiÃƒÂ© avec succÃƒÂ¨s");
+      setStatus("AuthentifiÃƒÆ'Ã†a€™Ãƒa€š© avec succÃƒÆ'Ã†a€™Ãƒa€š¨s");
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -258,7 +258,7 @@ export function WalletAuthCard() {
           : "Erreur inconnue pendant l'authentification.";
 
       setError(message);
-      setStatus("Ãƒâ€°chec de l'authentification");
+      setStatus("ÃƒÆ'Ã†a€™aaa€š¬°chec de l'authentification");
     } finally {
       setIsLoading(false);
     }
@@ -278,7 +278,7 @@ export function WalletAuthCard() {
       const balance = await getSynBalance(walletAddress);
       setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
       await refreshEvents(walletAddress);
-      setStatus(authToken ? "AuthentifiÃƒÂ© avec succÃƒÂ¨s" : "Balance actualisÃƒÂ©e");
+      setStatus(authToken ? "AuthentifiÃƒÆ'Ã†a€™Ãƒa€š© avec succÃƒÆ'Ã†a€™Ãƒa€š¨s" : "Balance actualisÃƒÆ'Ã†a€™Ãƒa€š©e");
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -294,12 +294,12 @@ export function WalletAuthCard() {
 
   async function claimReward() {
     if (!walletAddress || !authToken) {
-      setError("Connecte et authentifie ton wallet avant de rÃƒÂ©clamer une rÃƒÂ©compense.");
+      setError("Connecte et authentifie ton wallet avant de rÃƒÆ'Ã†a€™Ãƒa€š©clamer une rÃƒÆ'Ã†a€™Ãƒa€š©compense.");
       return;
     }
 
     if (!canClaimReward) {
-      setError("Score insuffisant pour rÃƒÂ©clamer une rÃƒÂ©compense MVP.");
+      setError("Score insuffisant pour rÃƒÆ'Ã†a€™Ãƒa€š©clamer une rÃƒÆ'Ã†a€™Ãƒa€š©compense MVP.");
       return;
     }
 
@@ -307,21 +307,21 @@ export function WalletAuthCard() {
     setError("");
 
     try {
-      setStatus("Claim rÃƒÂ©compense MVP...");
+      setStatus("Claim rÃƒÆ'Ã†a€™Ãƒa€š©compense MVP...");
 
       const rewardResponse = await claimSynoraReward(authToken);
 
       applyReputationProfile(rewardResponse.reputation);
       await refreshEvents(walletAddress);
-      setStatus("RÃƒÂ©compense MVP enregistrÃƒÂ©e");
+      setStatus("RÃƒÆ'Ã†a€™Ãƒa€š©compense MVP enregistrÃƒÆ'Ã†a€™Ãƒa€š©e");
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
           ? caughtError.message
-          : "Erreur inconnue pendant le claim rÃƒÂ©compense.";
+          : "Erreur inconnue pendant le claim rÃƒÆ'Ã†a€™Ãƒa€š©compense.";
 
       setError(message);
-      setStatus("Ãƒâ€°chec claim rÃƒÂ©compense");
+      setStatus("ÃƒÆ'Ã†a€™aaa€š¬°chec claim rÃƒÆ'Ã†a€™Ãƒa€š©compense");
     } finally {
       setIsLoading(false);
     }
@@ -338,7 +338,7 @@ export function WalletAuthCard() {
     setRewardAuthorizationStatus("");
 
     try {
-      setStatus("Génération autorisation rewards...");
+      setStatus("Generation autorisation rewards...");
 
       const response = await requestRewardAuthorization(authToken);
 
@@ -346,7 +346,7 @@ export function WalletAuthCard() {
         `Autorisation OK: ${response.authorization.amount} wei, rewardId ${response.authorization.rewardId.slice(0, 10)}...`
       );
 
-      setStatus("Autorisation rewards générée");
+      setStatus("Autorisation rewards generee");
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -354,7 +354,7 @@ export function WalletAuthCard() {
           : "Erreur inconnue pendant l'autorisation rewards.";
 
       setError(message);
-      setStatus("Échec autorisation rewards");
+      setStatus("Ãƒa€°chec autorisation rewards");
     } finally {
       setIsLoading(false);
     }
@@ -367,7 +367,7 @@ export function WalletAuthCard() {
     setReputation(null);
     setEvents([]);
     setSynBalance("0");
-    setStatus("Wallet non connectÃƒÂ©");
+    setStatus("Wallet non connectÃƒÆ'Ã†a€™Ãƒa€š©");
     setError("");
   }
 
@@ -396,11 +396,11 @@ export function WalletAuthCard() {
             Dashboard utilisateur
           </p>
 
-          <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et rÃƒÂ©putation</h2>
+          <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et rÃƒÆ'Ã†a€™Ãƒa€š©putation</h2>
 
           <p className="mt-3 text-slate-300">
-            SYNORA lit la balance SYN, authentifie le wallet, affiche lÃ¢â‚¬â„¢historique rÃƒÂ©cent
-            et permet un claim de rÃƒÂ©compense MVP off-chain.
+            SYNORA lit la balance SYN, authentifie le wallet, affiche lÃƒÆ'¢aaa‚¬Å¡¬aaa‚¬Å¾¢historique rÃƒÆ'Ã†a€™Ãƒa€š©cent
+            et permet un claim de rÃƒÆ'Ã†a€™Ãƒa€š©compense MVP off-chain.
           </p>
         </div>
 
@@ -423,7 +423,7 @@ export function WalletAuthCard() {
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-sm text-slate-400">Session</p>
             <p className="mt-2 text-sm font-semibold">
-              {authToken ? "JWT reÃƒÂ§u" : "Non authentifiÃƒÂ©"}
+              {authToken ? "JWT reÃƒÆ'Ã†a€™Ãƒa€š§u" : "Non authentifiÃƒÆ'Ã†a€™Ãƒa€š©"}
             </p>
           </div>
         </div>
@@ -441,12 +441,12 @@ export function WalletAuthCard() {
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">RÃƒÂ©compenses</p>
+              <p className="text-sm text-slate-400">RÃƒÆ'Ã†a€™Ãƒa€š©compenses</p>
               <p className="mt-2 text-3xl font-bold">{user.rewardsClaimed}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">Ãƒâ€°vÃƒÂ©nements</p>
+              <p className="text-sm text-slate-400">ÃƒÆ'Ã†a€™aaa€š¬°vÃƒÆ'Ã†a€™Ãƒa€š©nements</p>
               <p className="mt-2 text-3xl font-bold">{reputation?.eventsCount ?? 0}</p>
             </div>
           </div>
@@ -454,7 +454,7 @@ export function WalletAuthCard() {
 
         {reputation ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300">
-            DerniÃƒÂ¨re mise ÃƒÂ  jour rÃƒÂ©putation :{" "}
+            DerniÃƒÆ'Ã†a€™Ãƒa€š¨re mise ÃƒÆ'Ã†a€™Ãƒa€š  jour rÃƒÆ'Ã†a€™Ãƒa€š©putation :{" "}
             <span className="font-mono text-cyan-300">{reputation.updatedAt}</span>
           </div>
         ) : null}
@@ -462,7 +462,7 @@ export function WalletAuthCard() {
         {events.length > 0 ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
-              Historique rÃƒÂ©cent
+              Historique rÃƒÆ'Ã†a€™Ãƒa€š©cent
             </p>
 
             <div className="mt-4 flex flex-col gap-3">
@@ -519,7 +519,7 @@ export function WalletAuthCard() {
             disabled={isLoading || !canClaimReward}
             className="rounded-2xl border border-cyan-500 px-5 py-3 font-bold text-cyan-200 transition hover:bg-cyan-950 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Claim rÃƒÂ©compense MVP
+            Claim rÃƒÆ'Ã†a€™Ãƒa€š©compense MVP
           </button>
 
           <button
@@ -536,13 +536,13 @@ export function WalletAuthCard() {
             onClick={disconnect}
             className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
           >
-            RÃƒÂ©initialiser
+            RÃƒÆ'Ã†a€™Ãƒa€š©initialiser
           </button>
         </div>
 
         <p className="text-sm text-slate-400">
-          Condition MVP claim : session authentifiÃƒÂ©e et score supÃƒÂ©rieur ou ÃƒÂ©gal ÃƒÂ  60.
-          Ce claim est off-chain et sert ÃƒÂ  valider le parcours rÃƒÂ©compense avant un contrat rewards.
+          Condition MVP claim : session authentifiÃƒÆ'Ã†a€™Ãƒa€š©e et score supÃƒÆ'Ã†a€™Ãƒa€š©rieur ou ÃƒÆ'Ã†a€™Ãƒa€š©gal ÃƒÆ'Ã†a€™Ãƒa€š  60.
+          Ce claim est off-chain et sert ÃƒÆ'Ã†a€™Ãƒa€š  valider le parcours rÃƒÆ'Ã†a€™Ãƒa€š©compense avant un contrat rewards.
         </p>
       </div>
     </section>

@@ -1,8 +1,8 @@
 import { WalletAuthCard } from "@/components/WalletAuthCard";
 
 export default function Home() {
-  const tokenAddress = process.env.NEXT_PUBLIC_SYN_TOKEN_ADDRESS ?? "Non configuré";
-  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ?? "Non configuré";
+  const tokenAddress = process.env.NEXT_PUBLIC_SYN_TOKEN_ADDRESS ?? "Non configure";
+  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ?? "Non configure";
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
@@ -13,18 +13,18 @@ export default function Home() {
           </p>
 
           <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
-            Réputation Web3, récompenses SYN et dashboard utilisateur.
+            Reputation Web3, recompenses SYN et dashboard utilisateur.
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg text-slate-300">
             Connecte ton wallet MetaMask, lis ta balance SYN, signe un message hors-chain
-            et consulte ton score de réputation SYNORA.
+            et consulte ton score de reputation SYNORA.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Réseau</p>
+            <p className="text-sm text-slate-400">Reseau</p>
             <p className="mt-2 text-2xl font-semibold">Base Sepolia</p>
           </div>
 
