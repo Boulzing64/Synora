@@ -2,7 +2,7 @@ export {};
 
 type EthereumRequestArgs = {
   method: string;
-  params?: unknown[] | Record<string, unknown>;
+  params?: readonly unknown[] | Record<string, unknown>;
 };
 
 type EthereumProvider = {

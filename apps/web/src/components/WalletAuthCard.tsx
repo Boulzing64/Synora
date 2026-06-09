@@ -7,11 +7,18 @@ import {
   type SynoraUser,
   verifyAuthSignature,
 } from "@/lib/api";
+import {
+  BASE_SEPOLIA_CHAIN_ID_HEX,
+  BASE_SEPOLIA_EXPLORER_URL,
+  BASE_SEPOLIA_RPC_URL,
+} from "@/lib/chain";
+import { getSynBalance } from "@/lib/synToken";
 
 export function WalletAuthCard() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [authToken, setAuthToken] = useState<string>("");
   const [user, setUser] = useState<SynoraUser | null>(null);
+  const [synBalance, setSynBalance] = useState<string>("0");
   const [status, setStatus] = useState<string>("Wallet non connecté");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +31,51 @@ export function WalletAuthCard() {
     return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
   }, [walletAddress]);
 
+  async function ensureBaseSepoliaNetwork() {
+    if (!window.ethereum) {
+      throw new Error("MetaMask est introuvable.");
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            chainId: BASE_SEPOLIA_CHAIN_ID_HEX,
+          },
+        ],
+      });
+    } catch (switchError) {
+      const errorCode =
+        typeof switchError === "object" &&
+        switchError !== null &&
+        "code" in switchError
+          ? Number((switchError as { code: unknown }).code)
+          : 0;
+
+      if (errorCode !== 4902) {
+        throw switchError;
+      }
+
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: BASE_SEPOLIA_CHAIN_ID_HEX,
+            chainName: "Base Sepolia",
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            rpcUrls: [BASE_SEPOLIA_RPC_URL],
+            blockExplorerUrls: [BASE_SEPOLIA_EXPLORER_URL],
+          },
+        ],
+      });
+    }
+  }
+
   async function connectAndAuthenticate() {
     setIsLoading(true);
     setError("");
@@ -32,6 +84,9 @@ export function WalletAuthCard() {
       if (!window.ethereum) {
         throw new Error("MetaMask est introuvable.");
       }
+
+      setStatus("Connexion au réseau Base Sepolia...");
+      await ensureBaseSepoliaNetwork();
 
       setStatus("Connexion au wallet...");
 
@@ -46,6 +101,11 @@ export function WalletAuthCard() {
       }
 
       setWalletAddress(connectedWallet);
+      setStatus("Lecture de la balance SYN...");
+
+      const balance = await getSynBalance(connectedWallet);
+      setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
+
       setStatus("Création du message de signature...");
 
       const nonceResponse = await requestAuthNonce(connectedWallet);
@@ -80,10 +140,38 @@ export function WalletAuthCard() {
     }
   }
 
+  async function refreshBalance() {
+    if (!walletAddress) {
+      setError("Connecte d'abord ton wallet.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      setStatus("Actualisation de la balance SYN...");
+      const balance = await getSynBalance(walletAddress);
+      setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
+      setStatus(authToken ? "Authentifié avec succès" : "Balance actualisée");
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Erreur inconnue pendant la lecture de balance.";
+
+      setError(message);
+      setStatus("Erreur lecture balance");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   function disconnect() {
     setWalletAddress("");
     setAuthToken("");
     setUser(null);
+    setSynBalance("0");
     setStatus("Wallet non connecté");
     setError("");
   }
@@ -93,20 +181,26 @@ export function WalletAuthCard() {
       <div className="flex flex-col gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
-            Authentification wallet
+            Dashboard utilisateur
           </p>
 
-          <h2 className="mt-3 text-3xl font-bold">Connexion MetaMask</h2>
+          <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et réputation</h2>
 
           <p className="mt-3 text-slate-300">
-            SYNORA demande une signature hors-chain. Cette action ne coûte pas de gas.
+            SYNORA lit la balance SYN sur Base Sepolia, puis authentifie le wallet avec une
+            signature hors-chain sans frais de gas.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-sm text-slate-400">Wallet</p>
             <p className="mt-2 break-all font-mono text-sm text-cyan-300">{shortWallet}</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+            <p className="text-sm text-slate-400">Balance SYN</p>
+            <p className="mt-2 text-2xl font-bold">{synBalance}</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
@@ -154,7 +248,16 @@ export function WalletAuthCard() {
             disabled={isLoading}
             className="rounded-2xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isLoading ? "Connexion..." : "Connecter et signer"}
+            {isLoading ? "Connexion..." : "Connecter, lire SYN et signer"}
+          </button>
+
+          <button
+            type="button"
+            onClick={refreshBalance}
+            disabled={isLoading || !walletAddress}
+            className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Actualiser balance
           </button>
 
           <button
