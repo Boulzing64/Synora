@@ -1,4 +1,4 @@
-﻿import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 
 export default defineConfig({
@@ -27,6 +27,11 @@ export default defineConfig({
       chainId: 84532,
       url: configVariable("BASE_SEPOLIA_RPC_URL"),
       accounts: [configVariable("PRIVATE_KEY")]
+    }
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("BASESCAN_API_KEY")
     }
   }
 });

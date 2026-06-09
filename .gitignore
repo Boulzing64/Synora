@@ -19,3 +19,5 @@ Thumbs.db
 !.vscode/extensions.json
 
 scripts/set-base-sepolia-env.ps1
+
+contracts/scripts/synora-constructor-args.ts
