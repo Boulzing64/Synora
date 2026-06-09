@@ -2,6 +2,8 @@ import { config } from "dotenv";
 import crypto from "node:crypto";
 import cors from "cors";
 import express from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { getAddress, isAddress, verifyMessage } from "viem";
 import { z } from "zod";
@@ -21,9 +23,22 @@ config({ path: ".env.local" });
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const apiPort = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 const jwtSecret = process.env.JWT_SECRET ?? "";
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
+const webOrigins = process.env.WEB_ORIGINS;
+
+const allowedOrigins = [
+  webOrigin,
+  ...(webOrigins
+    ? webOrigins
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    : []),
+];
 
 if (!jwtSecret || jwtSecret.length < 32) {
   throw new Error("JWT_SECRET manquant ou trop court. Minimum recommande: 32 caracteres.");
@@ -33,6 +48,27 @@ const jwtOptions = {
   issuer: "synora-api",
   audience: "synora-web",
 } as const;
+
+const authNonceRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authVerifyRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const reputationEventRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function getAuthenticatedWallet(authorizationHeader: string | undefined) {
   if (!authorizationHeader?.startsWith("Bearer ")) {
@@ -56,14 +92,28 @@ function getAuthenticatedWallet(authorizationHeader: string | undefined) {
   }
 }
 
+app.use(helmet());
+
 app.use(
   cors({
-    origin: webOrigin,
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("CORS_ORIGIN_NOT_ALLOWED"));
+    },
     credentials: true,
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "64kb" }));
 
 app.get("/health", (_request, response) => {
   response.json({
@@ -72,7 +122,7 @@ app.get("/health", (_request, response) => {
   });
 });
 
-app.post("/auth/nonce", async (request, response) => {
+app.post("/auth/nonce", authNonceRateLimit, async (request, response) => {
   const schema = z.object({
     walletAddress: z.string(),
   });
@@ -115,7 +165,7 @@ app.post("/auth/nonce", async (request, response) => {
   });
 });
 
-app.post("/auth/verify", async (request, response) => {
+app.post("/auth/verify", authVerifyRateLimit, async (request, response) => {
   const schema = z.object({
     walletAddress: z.string(),
     signature: z.string(),
@@ -237,7 +287,7 @@ app.get("/reputation/:walletAddress", async (request, response) => {
   });
 });
 
-app.post("/reputation/event", async (request, response) => {
+app.post("/reputation/event", reputationEventRateLimit, async (request, response) => {
   const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 
   if (!authenticatedWallet) {
