@@ -43,6 +43,10 @@ jobs:
         shell: pwsh
         run: npm run test:reputation
 
+      - name: Test API HTTP
+        shell: pwsh
+        run: npm run test:api
+
       - name: Build web
         shell: pwsh
         run: npm run build:web

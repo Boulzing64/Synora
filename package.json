@@ -23,7 +23,8 @@
                     "build:api":  "npm run build -w apps/api",
                     "build:web":  "npm run build -w apps/web",
                     "test:reputation":  "npm run test:reputation -w apps/api",
-                    "verify:mvp":  "npm run build:api \u0026\u0026 npm run test:reputation \u0026\u0026 npm run build:web"
+                    "verify:mvp":  "npm run build:api \u0026\u0026 npm run test:reputation \u0026\u0026 npm run test:api \u0026\u0026 npm run build:web",
+                    "test:api":  "npm run test:api -w apps/api"
                 },
     "devDependencies":  {
                             "prettier":  "^3.3.3",
