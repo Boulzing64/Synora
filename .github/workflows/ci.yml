@@ -1,0 +1,48 @@
+name: SYNORA CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    name: Verify SYNORA MVP
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        shell: pwsh
+        run: npm install
+
+      - name: Compile smart contracts
+        shell: pwsh
+        run: npm run compile -w .\contracts
+
+      - name: Test smart contracts
+        shell: pwsh
+        run: npm run test -w .\contracts
+
+      - name: Build API
+        shell: pwsh
+        run: npm run build:api
+
+      - name: Test reputation engine
+        shell: pwsh
+        run: npm run test:reputation
+
+      - name: Build web
+        shell: pwsh
+        run: npm run build:web
