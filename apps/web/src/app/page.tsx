@@ -17,8 +17,8 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg text-slate-300">
-            Connecte ton wallet MetaMask, signe un message hors-chain et récupère ton profil
-            SYNORA depuis l’API.
+            Connecte ton wallet MetaMask, lis ta balance SYN, signe un message hors-chain
+            et consulte ton score de réputation SYNORA.
           </p>
         </div>
 
@@ -37,6 +37,15 @@ export default function Home() {
             <p className="text-sm text-slate-400">Token</p>
             <p className="mt-2 break-all font-mono text-sm text-cyan-300">{tokenAddress}</p>
           </div>
+        </div>
+
+        <div className="flex">
+          <a
+            href="/status"
+            className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
+          >
+            Voir le statut MVP
+          </a>
         </div>
 
         <WalletAuthCard />
