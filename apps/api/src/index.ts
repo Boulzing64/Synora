@@ -7,6 +7,11 @@ import { getAddress, isAddress, verifyMessage } from "viem";
 import { z } from "zod";
 
 import { buildAuthMessage } from "./auth/messages.js";
+import {
+  buildReputationProfile,
+  createInitialReputationEvents,
+  type ReputationEvent,
+} from "./reputation/engine.js";
 
 config({ path: ".env.local" });
 
@@ -28,6 +33,29 @@ const nonceStore = new Map<
     expiresAt: number;
   }
 >();
+
+const reputationEventsStore = new Map<string, ReputationEvent[]>();
+
+function getWalletEvents(walletAddress: string) {
+  const existingEvents = reputationEventsStore.get(walletAddress);
+
+  if (existingEvents) {
+    return existingEvents;
+  }
+
+  const initialEvents = createInitialReputationEvents();
+  reputationEventsStore.set(walletAddress, initialEvents);
+
+  return initialEvents;
+}
+
+function addWalletEvent(walletAddress: string, event: ReputationEvent) {
+  const events = getWalletEvents(walletAddress);
+  events.push(event);
+  reputationEventsStore.set(walletAddress, events);
+
+  return events;
+}
 
 app.use(
   cors({
@@ -66,6 +94,11 @@ app.post("/auth/nonce", (request, response) => {
     nonce,
     issuedAt,
     expiresAt: Date.now() + 5 * 60 * 1000,
+  });
+
+  addWalletEvent(walletAddress, {
+    type: "DASHBOARD_VISITED",
+    createdAt: issuedAt,
   });
 
   const message = buildAuthMessage({
@@ -135,6 +168,16 @@ app.post("/auth/verify", async (request, response) => {
 
   nonceStore.delete(walletAddress);
 
+  const events = addWalletEvent(walletAddress, {
+    type: "WALLET_AUTHENTICATED",
+    createdAt: new Date().toISOString(),
+  });
+
+  const reputationProfile = buildReputationProfile({
+    walletAddress,
+    events,
+  });
+
   const token = jwt.sign(
     {
       sub: walletAddress,
@@ -152,10 +195,11 @@ app.post("/auth/verify", async (request, response) => {
     token,
     user: {
       walletAddress,
-      score: 0,
-      level: "BRONZE",
-      rewardsClaimed: 0,
+      score: reputationProfile.score,
+      level: reputationProfile.level,
+      rewardsClaimed: reputationProfile.rewardsClaimed,
     },
+    reputation: reputationProfile,
   });
 });
 
@@ -184,6 +228,63 @@ app.get("/auth/me", (request, response) => {
       error: "INVALID_TOKEN",
     });
   }
+});
+
+app.get("/reputation/:walletAddress", (request, response) => {
+  const walletAddressParam = request.params.walletAddress;
+
+  if (!isAddress(walletAddressParam)) {
+    return response.status(400).json({
+      error: "INVALID_WALLET_ADDRESS",
+    });
+  }
+
+  const walletAddress = getAddress(walletAddressParam);
+  const events = getWalletEvents(walletAddress);
+
+  return response.json({
+    reputation: buildReputationProfile({
+      walletAddress,
+      events,
+    }),
+  });
+});
+
+app.post("/reputation/event", (request, response) => {
+  const schema = z.object({
+    walletAddress: z.string(),
+    type: z.enum([
+      "PROFILE_CREATED",
+      "WALLET_AUTHENTICATED",
+      "DASHBOARD_VISITED",
+      "SYN_BALANCE_CONNECTED",
+      "REWARD_CLAIMED",
+    ]),
+    value: z.number().min(0).max(100).optional(),
+  });
+
+  const parsed = schema.safeParse(request.body);
+
+  if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+    return response.status(400).json({
+      error: "INVALID_REPUTATION_EVENT",
+    });
+  }
+
+  const walletAddress = getAddress(parsed.data.walletAddress);
+
+  const events = addWalletEvent(walletAddress, {
+    type: parsed.data.type,
+    value: parsed.data.value,
+    createdAt: new Date().toISOString(),
+  });
+
+  return response.json({
+    reputation: buildReputationProfile({
+      walletAddress,
+      events,
+    }),
+  });
 });
 
 app.listen(apiPort, () => {
