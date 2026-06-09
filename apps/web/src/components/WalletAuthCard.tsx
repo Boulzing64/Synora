@@ -20,6 +20,7 @@ import {
   BASE_SEPOLIA_RPC_URL,
 } from "@/lib/chain";
 import { getSynBalance } from "@/lib/synToken";
+import { getInitialLocale, translations, type SynoraLocale } from "@/lib/i18n";
 
 const SESSION_STORAGE_KEY = "synora.authToken";
 
@@ -31,6 +32,17 @@ function formatEventType(type: string) {
 }
 
 export function WalletAuthCard() {
+    const [locale, setLocale] = useState<SynoraLocale>("fr");
+  const t = translations[locale];
+
+  useEffect(() => {
+    setLocale(getInitialLocale());
+  }, []);
+
+  function changeLocale(nextLocale: SynoraLocale) {
+    setLocale(nextLocale);
+    window.localStorage.setItem("synora.locale", nextLocale);
+  }
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [authToken, setAuthToken] = useState<string>("");
   const [user, setUser] = useState<SynoraUser | null>(null);
@@ -364,6 +376,23 @@ export function WalletAuthCard() {
       <div className="flex flex-col gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
+          <div className="mt-4 flex gap-2">
+  <button
+    type="button"
+    onClick={() => changeLocale("fr")}
+    className="rounded-xl border border-slate-700 px-3 py-2 text-sm font-bold"
+  >
+    FR
+  </button>
+
+  <button
+    type="button"
+    onClick={() => changeLocale("en")}
+    className="rounded-xl border border-slate-700 px-3 py-2 text-sm font-bold"
+  >
+    EN
+  </button>
+</div>
             Dashboard utilisateur
           </p>
 
