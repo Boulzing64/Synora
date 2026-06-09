@@ -296,6 +296,26 @@ export function createSynoraApp() {
       }),
     });
   });
+  app.get("/reputation/:walletAddress/events", async (request, response) => {
+    const walletAddressParam = request.params.walletAddress;
+
+    if (!isAddress(walletAddressParam)) {
+      return response.status(400).json({
+        error: "INVALID_WALLET_ADDRESS",
+      });
+    }
+
+    const walletAddress = getAddress(walletAddressParam);
+    const events = await getWalletEvents(walletAddress);
+
+    return response.json({
+      walletAddress,
+      events: events
+        .slice()
+        .reverse()
+        .slice(0, 20),
+    });
+  });
 
   app.post("/reputation/event", reputationEventRateLimit, async (request, response) => {
     const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);

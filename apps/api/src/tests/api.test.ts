@@ -83,3 +83,10 @@ assert.equal(reputationResponse.body.reputation.walletAddress, account.address);
 assert.ok(reputationResponse.body.reputation.eventsCount >= 3);
 
 console.log("SYNORA API HTTP tests passed.");
+const eventsResponse = await request(app)
+  .get(`/reputation/${account.address}/events`)
+  .expect(200);
+
+assert.equal(eventsResponse.body.walletAddress, account.address);
+assert.ok(Array.isArray(eventsResponse.body.events));
+assert.ok(eventsResponse.body.events.length > 0);

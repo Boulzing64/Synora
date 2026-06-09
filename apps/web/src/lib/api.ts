@@ -31,9 +31,22 @@ export type AuthMeResponse = {
 };
 
 export type ReputationEventType =
+  | "PROFILE_CREATED"
+  | "WALLET_AUTHENTICATED"
   | "DASHBOARD_VISITED"
   | "SYN_BALANCE_CONNECTED"
   | "REWARD_CLAIMED";
+
+export type SynoraReputationEvent = {
+  type: ReputationEventType;
+  createdAt: string;
+  value?: number;
+};
+
+export type ReputationEventsResponse = {
+  walletAddress: string;
+  events: SynoraReputationEvent[];
+};
 
 export type ReputationEventResponse = {
   reputation: SynoraReputationProfile;
@@ -110,4 +123,7 @@ export function reportReputationEvent(
   token: string
 ) {
   return postJson<ReputationEventResponse>("/reputation/event", params, token);
+}
+export function getReputationEvents(walletAddress: string) {
+  return getJson<ReputationEventsResponse>(`/reputation/${walletAddress}/events`);
 }
