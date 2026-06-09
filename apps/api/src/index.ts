@@ -7,11 +7,15 @@ import { getAddress, isAddress, verifyMessage } from "viem";
 import { z } from "zod";
 
 import { buildAuthMessage } from "./auth/messages.js";
+import { buildReputationProfile } from "./reputation/engine.js";
 import {
-  buildReputationProfile,
-  createInitialReputationEvents,
-  type ReputationEvent,
-} from "./reputation/engine.js";
+  addWalletEvent,
+  deleteAuthNonce,
+  getAuthNonce,
+  getWalletEvents,
+  initializeDatabase,
+  saveAuthNonce,
+} from "./storage/repositories.js";
 
 config({ path: ".env.local" });
 
@@ -29,38 +33,6 @@ const jwtOptions = {
   issuer: "synora-api",
   audience: "synora-web",
 } as const;
-
-const nonceStore = new Map<
-  string,
-  {
-    nonce: string;
-    issuedAt: string;
-    expiresAt: number;
-  }
->();
-
-const reputationEventsStore = new Map<string, ReputationEvent[]>();
-
-function getWalletEvents(walletAddress: string) {
-  const existingEvents = reputationEventsStore.get(walletAddress);
-
-  if (existingEvents) {
-    return existingEvents;
-  }
-
-  const initialEvents = createInitialReputationEvents();
-  reputationEventsStore.set(walletAddress, initialEvents);
-
-  return initialEvents;
-}
-
-function addWalletEvent(walletAddress: string, event: ReputationEvent) {
-  const events = getWalletEvents(walletAddress);
-  events.push(event);
-  reputationEventsStore.set(walletAddress, events);
-
-  return events;
-}
 
 function getAuthenticatedWallet(authorizationHeader: string | undefined) {
   if (!authorizationHeader?.startsWith("Bearer ")) {
@@ -100,7 +72,7 @@ app.get("/health", (_request, response) => {
   });
 });
 
-app.post("/auth/nonce", (request, response) => {
+app.post("/auth/nonce", async (request, response) => {
   const schema = z.object({
     walletAddress: z.string(),
   });
@@ -117,13 +89,13 @@ app.post("/auth/nonce", (request, response) => {
   const nonce = crypto.randomBytes(16).toString("hex");
   const issuedAt = new Date().toISOString();
 
-  nonceStore.set(walletAddress, {
+  await saveAuthNonce(walletAddress, {
     nonce,
     issuedAt,
     expiresAt: Date.now() + 5 * 60 * 1000,
   });
 
-  addWalletEvent(walletAddress, {
+  await addWalletEvent(walletAddress, {
     type: "DASHBOARD_VISITED",
     createdAt: issuedAt,
   });
@@ -158,7 +130,7 @@ app.post("/auth/verify", async (request, response) => {
   }
 
   const walletAddress = getAddress(parsed.data.walletAddress);
-  const nonceEntry = nonceStore.get(walletAddress);
+  const nonceEntry = await getAuthNonce(walletAddress);
 
   if (!nonceEntry) {
     return response.status(400).json({
@@ -167,7 +139,7 @@ app.post("/auth/verify", async (request, response) => {
   }
 
   if (Date.now() > nonceEntry.expiresAt) {
-    nonceStore.delete(walletAddress);
+    await deleteAuthNonce(walletAddress);
 
     return response.status(400).json({
       error: "NONCE_EXPIRED",
@@ -193,9 +165,9 @@ app.post("/auth/verify", async (request, response) => {
     });
   }
 
-  nonceStore.delete(walletAddress);
+  await deleteAuthNonce(walletAddress);
 
-  const events = addWalletEvent(walletAddress, {
+  const events = await addWalletEvent(walletAddress, {
     type: "WALLET_AUTHENTICATED",
     createdAt: new Date().toISOString(),
   });
@@ -245,7 +217,7 @@ app.get("/auth/me", (request, response) => {
   });
 });
 
-app.get("/reputation/:walletAddress", (request, response) => {
+app.get("/reputation/:walletAddress", async (request, response) => {
   const walletAddressParam = request.params.walletAddress;
 
   if (!isAddress(walletAddressParam)) {
@@ -255,7 +227,7 @@ app.get("/reputation/:walletAddress", (request, response) => {
   }
 
   const walletAddress = getAddress(walletAddressParam);
-  const events = getWalletEvents(walletAddress);
+  const events = await getWalletEvents(walletAddress);
 
   return response.json({
     reputation: buildReputationProfile({
@@ -265,7 +237,7 @@ app.get("/reputation/:walletAddress", (request, response) => {
   });
 });
 
-app.post("/reputation/event", (request, response) => {
+app.post("/reputation/event", async (request, response) => {
   const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 
   if (!authenticatedWallet) {
@@ -275,11 +247,7 @@ app.post("/reputation/event", (request, response) => {
   }
 
   const schema = z.object({
-    type: z.enum([
-      "DASHBOARD_VISITED",
-      "SYN_BALANCE_CONNECTED",
-      "REWARD_CLAIMED",
-    ]),
+    type: z.enum(["DASHBOARD_VISITED", "SYN_BALANCE_CONNECTED", "REWARD_CLAIMED"]),
     value: z.number().min(0).max(100).optional(),
   });
 
@@ -291,7 +259,7 @@ app.post("/reputation/event", (request, response) => {
     });
   }
 
-  const events = addWalletEvent(authenticatedWallet, {
+  const events = await addWalletEvent(authenticatedWallet, {
     type: parsed.data.type,
     value: parsed.data.value,
     createdAt: new Date().toISOString(),
@@ -304,6 +272,8 @@ app.post("/reputation/event", (request, response) => {
     }),
   });
 });
+
+await initializeDatabase();
 
 app.listen(apiPort, "0.0.0.0", () => {
   console.log(`SYNORA API listening on http://localhost:${apiPort}`);
