@@ -1,0 +1,28 @@
+﻿{
+  "name": "synora",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SYNORA Web3 reputation and reward platform",
+  "license": "MIT",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "contracts",
+    "packages/shared",
+    "packages/config"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:contracts": "npm run dev -w contracts",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  }
+}
