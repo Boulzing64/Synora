@@ -1,10 +1,10 @@
 # Handoff SYNORA
 
-## Ã‰tat MVP validÃ©
+## Ãƒâ€°tat MVP validÃƒÂ©
 
 SYNORA dispose maintenant d'un MVP Web3 fonctionnel de bout en bout.
 
-## DÃ©pÃ´t
+## DÃƒÂ©pÃƒÂ´t
 
 - GitHub: https://github.com/Boulzing64/Synora
 - Branche principale: main
@@ -25,7 +25,7 @@ SYNORA dispose maintenant d'un MVP Web3 fonctionnel de bout en bout.
 - Symbol: SYN
 - Address: 0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916
 - Explorer: https://sepolia.basescan.org/address/0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916
-- VÃ©rification: Hardhat Verify / Blockscout validÃ©e
+- VÃƒÂ©rification: Hardhat Verify / Blockscout validÃƒÂ©e
 - Supply initiale: 100,000,000 SYN
 - Decimals: 18
 
@@ -35,15 +35,15 @@ SYNORA dispose maintenant d'un MVP Web3 fonctionnel de bout en bout.
 - App Router
 - TypeScript
 - Tailwind
-- DÃ©ployÃ© sur Vercel
+- DÃƒÂ©ployÃƒÂ© sur Vercel
 - Connexion MetaMask
 - Switch automatique vers Base Sepolia
 - Lecture balance SYN
 - Signature wallet hors-chain
 - Session persistante via localStorage
 - Dashboard utilisateur
-- Historique rÃ©putation
-- Claim rÃ©compense MVP off-chain
+- Historique rÃƒÂ©putation
+- Claim rÃƒÂ©compense MVP off-chain
 - Page statut MVP
 
 ## Backend API
@@ -54,30 +54,30 @@ SYNORA dispose maintenant d'un MVP Web3 fonctionnel de bout en bout.
 - PostgreSQL Render
 - Authentification wallet par signature
 - JWT
-- Nonces persistÃ©s
-- RÃ©putation persistÃ©e
-- Events rÃ©putation
+- Nonces persistÃƒÂ©s
+- RÃƒÂ©putation persistÃƒÂ©e
+- Events rÃƒÂ©putation
 - Healthcheck
 - Helmet
 - CORS strict
 - Rate limiting
-- Logs structurÃ©s JSON
-- Tests API HTTP automatisÃ©s
+- Logs structurÃƒÂ©s JSON
+- Tests API HTTP automatisÃƒÂ©s
 
-## Base de donnÃ©es
+## Base de donnÃƒÂ©es
 
 - PostgreSQL Render
-- DATABASE_URL configurÃ© dans Render
-- Migrations versionnÃ©es via schema_migrations
+- DATABASE_URL configurÃƒÂ© dans Render
+- Migrations versionnÃƒÂ©es via schema_migrations
 - Tables:
   - users
   - auth_nonces
   - reputation_events
   - schema_migrations
 
-## RÃ©putation MVP
+## RÃƒÂ©putation MVP
 
-Ã‰vÃ©nements actuellement supportÃ©s:
+Ãƒâ€°vÃƒÂ©nements actuellement supportÃƒÂ©s:
 
 - PROFILE_CREATED
 - WALLET_AUTHENTICATED
@@ -85,19 +85,19 @@ SYNORA dispose maintenant d'un MVP Web3 fonctionnel de bout en bout.
 - SYN_BALANCE_CONNECTED
 - REWARD_CLAIMED
 
-Fonctions validÃ©es:
+Fonctions validÃƒÂ©es:
 
 - Calcul score
 - Niveau utilisateur
-- Historique Ã©vÃ©nements
-- RÃ©compenses rÃ©clamÃ©es
+- Historique ÃƒÂ©vÃƒÂ©nements
+- RÃƒÂ©compenses rÃƒÂ©clamÃƒÂ©es
 - Persistance PostgreSQL
 
-## RÃ©compenses MVP
+## RÃƒÂ©compenses MVP
 
-- Claim off-chain validÃ©
+- Claim off-chain validÃƒÂ©
 - Condition frontend: score >= 60 et JWT actif
-- Ã‰vÃ©nement crÃ©Ã©: REWARD_CLAIMED
+- Ãƒâ€°vÃƒÂ©nement crÃƒÂ©ÃƒÂ©: REWARD_CLAIMED
 - Pas encore de transfert SYN automatique
 - Pas encore de contrat rewards
 
@@ -105,8 +105,8 @@ Fonctions validÃ©es:
 
 - WEB_ORIGIN=https://synora-web.vercel.app
 - WEB_ORIGINS=https://synora-web.vercel.app
-- JWT_SECRET configurÃ© dans Render
-- DATABASE_URL configurÃ© dans Render
+- JWT_SECRET configurÃƒÂ© dans Render
+- DATABASE_URL configurÃƒÂ© dans Render
 
 ## Variables Vercel
 
@@ -121,7 +121,7 @@ Installer:
 
 npm install
 
-VÃ©rifier le MVP:
+VÃƒÂ©rifier le MVP:
 
 npm run verify:mvp
 
@@ -145,7 +145,7 @@ npm run test:reputation
 
 ## Limites actuelles
 
-- Claim rÃ©compense uniquement off-chain
+- Claim rÃƒÂ©compense uniquement off-chain
 - Pas encore de contrat RewardsDistributor
 - Pas encore de SIWE ou EIP-712
 - Pas encore de logs frontend
@@ -153,39 +153,64 @@ npm run test:reputation
 - Pas encore de dashboard admin
 - Pas encore de gouvernance
 - Pas encore d'IA comportementale
-- RPC public Base Sepolia utilisÃ©
-- Render Free peut dormir aprÃ¨s inactivitÃ©
+- RPC public Base Sepolia utilisÃƒÂ©
+- Render Free peut dormir aprÃƒÂ¨s inactivitÃƒÂ©
 
-## Prochaine prioritÃ© recommandÃ©e
+## Prochaine prioritÃƒÂ© recommandÃƒÂ©e
 
-CrÃ©er le systÃ¨me rewards beta:
+CrÃƒÂ©er le systÃƒÂ¨me rewards beta:
 
 1. Table reward_claims
-2. RÃ¨gles anti-abus cÃ´tÃ© API
-3. Plafond de claim par wallet et pÃ©riode
+2. RÃƒÂ¨gles anti-abus cÃƒÂ´tÃƒÂ© API
+3. Plafond de claim par wallet et pÃƒÂ©riode
 4. Endpoint /rewards/claim
-5. Dashboard rÃ©compenses enrichi
-6. SpÃ©cification RewardsDistributor on-chain
-## Rewards Beta préparé
+5. Dashboard rÃƒÂ©compenses enrichi
+6. SpÃƒÂ©cification RewardsDistributor on-chain
+## Rewards Beta prÃ©parÃ©
 
 - Endpoint off-chain actif: POST /rewards/claim
-- Endpoint autorisation on-chain préparé: POST /rewards/authorize
-- Signature EIP-712 backend préparée
-- Contrat RewardsDistributor préparé avec claimWithSignature
-- Module Ignition RewardsDistributor préparé
+- Endpoint autorisation on-chain prÃ©parÃ©: POST /rewards/authorize
+- Signature EIP-712 backend prÃ©parÃ©e
+- Contrat RewardsDistributor prÃ©parÃ© avec claimWithSignature
+- Module Ignition RewardsDistributor prÃ©parÃ©
 - Reward claim anti-abus: 1 claim MVP par wallet par 24h
-- Table PostgreSQL prévue: reward_claims
+- Table PostgreSQL prÃ©vue: reward_claims
 - Migration rewards: 005_create_reward_claims
-- Documentation rewards mise à jour
+- Documentation rewards mise Ã  jour
 
-## Prochaine étape recommandée
+## Prochaine Ã©tape recommandÃ©e
 
-Déployer RewardsDistributor sur Base Sepolia uniquement après validation:
+DÃ©ployer RewardsDistributor sur Base Sepolia uniquement aprÃ¨s validation:
 
-1. Créer un wallet rewards signer dédié
+1. CrÃ©er un wallet rewards signer dÃ©diÃ©
 2. Ajouter REWARDS_SIGNER_PRIVATE_KEY dans Render
-3. Déployer RewardsDistributor
+3. DÃ©ployer RewardsDistributor
 4. Financer RewardsDistributor en SYN
 5. Configurer REWARDS_DISTRIBUTOR_ADDRESS dans Render
 6. Tester /rewards/authorize
-7. Ajouter claimWithSignature côté frontend
+7. Ajouter claimWithSignature cÃ´tÃ© frontend
+## RewardsDistributor Base Sepolia déployé
+
+- Network: Base Sepolia
+- Chain ID: 84532
+- SYNORA Token: 0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916
+- RewardsDistributor: 0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443
+- Rewards Signer: 0xE125C389ad7D323bAdeFE7aFc059dfFE8bF769eD
+- Explorer RewardsDistributor: https://sepolia.basescan.org/address/0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443
+
+## État Rewards On-chain
+
+- Contrat RewardsDistributor déployé
+- claimWithSignature disponible
+- Signature EIP-712 backend préparée
+- Endpoint API préparé: POST /rewards/authorize
+- Frontend claim on-chain non encore activé
+- Contrat pas encore financé en SYN
+
+## Prochaine étape
+
+Financer RewardsDistributor en SYN puis configurer Render:
+
+- REWARDS_DISTRIBUTOR_ADDRESS=0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443
+- REWARDS_CHAIN_ID=84532
+- REWARDS_SIGNER_PRIVATE_KEY=clé privée dédiée du wallet rewards signer

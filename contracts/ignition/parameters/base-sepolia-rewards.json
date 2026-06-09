@@ -1,6 +1,6 @@
 {
   "RewardsDistributorModule": {
     "rewardTokenAddress": "0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916",
-    "rewardsSigner": "0x0000000000000000000000000000000000000001"
+    "rewardsSigner": "0xE125C389ad7D323bAdeFE7aFc059dfFE8bF769eD"
   }
 }
