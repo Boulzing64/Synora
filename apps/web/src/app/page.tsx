@@ -1,55 +1,41 @@
-import { WalletAuthCard } from "@/components/WalletAuthCard";
+import Link from "next/link";
+
+import { SynoraShell } from "@/components/SynoraShell";
 
 export default function Home() {
-  const tokenAddress = process.env.NEXT_PUBLIC_SYN_TOKEN_ADDRESS ?? "Non configure";
-  const chainId = process.env.NEXT_PUBLIC_CHAIN_ID ?? "Non configure";
-
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <section className="mx-auto flex max-w-5xl flex-col gap-8">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
-            SYNORA MVP
-          </p>
+    <SynoraShell
+      title="Web3 reputation and rewards"
+      subtitle="SYNORA connects wallet authentication, reputation scoring and on-chain rewards on Base Sepolia."
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link
+          href="/dashboard"
+          className="rounded-2xl border border-slate-800 bg-slate-900 p-6 transition hover:border-cyan-400"
+        >
+          <p className="text-sm text-slate-400">Main app</p>
+          <h2 className="mt-2 text-2xl font-bold">Dashboard</h2>
+          <p className="mt-3 text-slate-300">Connect wallet, read SYN balance and view reputation.</p>
+        </Link>
 
-          <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
-            Reputation Web3, recompenses SYN et dashboard utilisateur.
-          </h1>
+        <Link
+          href="/rewards"
+          className="rounded-2xl border border-slate-800 bg-slate-900 p-6 transition hover:border-cyan-400"
+        >
+          <p className="text-sm text-slate-400">Rewards</p>
+          <h2 className="mt-2 text-2xl font-bold">On-chain claim</h2>
+          <p className="mt-3 text-slate-300">Claim SYN rewards through RewardsDistributor.</p>
+        </Link>
 
-          <p className="mt-6 max-w-2xl text-lg text-slate-300">
-            Connecte ton wallet MetaMask, lis ta balance SYN, signe un message hors-chain
-            et consulte ton score de reputation SYNORA.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Reseau</p>
-            <p className="mt-2 text-2xl font-semibold">Base Sepolia</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Chain ID</p>
-            <p className="mt-2 text-2xl font-semibold">{chainId}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Token</p>
-            <p className="mt-2 break-all font-mono text-sm text-cyan-300">{tokenAddress}</p>
-          </div>
-        </div>
-
-        <div className="flex">
-          <a
-            href="/status"
-            className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
-          >
-            Voir le statut MVP
-          </a>
-        </div>
-
-        <WalletAuthCard />
-      </section>
-    </main>
+        <Link
+          href="/status"
+          className="rounded-2xl border border-slate-800 bg-slate-900 p-6 transition hover:border-cyan-400"
+        >
+          <p className="text-sm text-slate-400">Infrastructure</p>
+          <h2 className="mt-2 text-2xl font-bold">Status</h2>
+          <p className="mt-3 text-slate-300">View public URLs, chain ID and contract addresses.</p>
+        </Link>
+      </div>
+    </SynoraShell>
   );
 }
