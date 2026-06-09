@@ -17,7 +17,7 @@ config({ path: ".env.local" });
 
 const app = express();
 
-const apiPort = Number(process.env.API_PORT ?? 4000);
+const apiPort = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 const jwtSecret = process.env.JWT_SECRET ?? "";
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
 
@@ -305,6 +305,6 @@ app.post("/reputation/event", (request, response) => {
   });
 });
 
-app.listen(apiPort, () => {
+app.listen(apiPort, "0.0.0.0", () => {
   console.log(`SYNORA API listening on http://localhost:${apiPort}`);
 });
