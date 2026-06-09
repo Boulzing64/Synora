@@ -25,6 +25,11 @@ export type AuthVerifyResponse = {
   reputation: SynoraReputationProfile;
 };
 
+export type AuthMeResponse = {
+  user: SynoraUser;
+  reputation: SynoraReputationProfile;
+};
+
 export type ReputationEventType =
   | "DASHBOARD_VISITED"
   | "SYN_BALANCE_CONNECTED"
@@ -33,6 +38,26 @@ export type ReputationEventType =
 export type ReputationEventResponse = {
   reputation: SynoraReputationProfile;
 };
+
+async function getJson<TResponse>(path: string, token?: string): Promise<TResponse> {
+  const response = await fetch(`${API_URL}${path}`, {
+    method: "GET",
+    headers: {
+      ...(token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {}),
+    },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw new Error(errorBody?.error ?? `API_ERROR_${response.status}`);
+  }
+
+  return response.json() as Promise<TResponse>;
+}
 
 async function postJson<TResponse>(
   path: string,
@@ -71,6 +96,10 @@ export function verifyAuthSignature(params: {
   signature: string;
 }) {
   return postJson<AuthVerifyResponse>("/auth/verify", params);
+}
+
+export function getAuthenticatedUser(token: string) {
+  return getJson<AuthMeResponse>("/auth/me", token);
 }
 
 export function reportReputationEvent(

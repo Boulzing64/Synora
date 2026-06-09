@@ -250,7 +250,7 @@ export function createSynoraApp() {
     });
   });
 
-  app.get("/auth/me", (request, response) => {
+  app.get("/auth/me", async (request, response) => {
     const walletAddress = getAuthenticatedWallet(request.headers.authorization);
 
     if (!walletAddress) {
@@ -259,10 +259,21 @@ export function createSynoraApp() {
       });
     }
 
+    const events = await getWalletEvents(walletAddress);
+
+    const reputationProfile = buildReputationProfile({
+      walletAddress,
+      events,
+    });
+
     return response.json({
       user: {
         walletAddress,
+        score: reputationProfile.score,
+        level: reputationProfile.level,
+        rewardsClaimed: reputationProfile.rewardsClaimed,
       },
+      reputation: reputationProfile,
     });
   });
 

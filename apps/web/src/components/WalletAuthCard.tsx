@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
+  getAuthenticatedUser,
   reportReputationEvent,
   requestAuthNonce,
   type SynoraReputationProfile,
@@ -16,19 +17,76 @@ import {
 } from "@/lib/chain";
 import { getSynBalance } from "@/lib/synToken";
 
+const SESSION_STORAGE_KEY = "synora.authToken";
+
 export function WalletAuthCard() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [authToken, setAuthToken] = useState<string>("");
   const [user, setUser] = useState<SynoraUser | null>(null);
   const [reputation, setReputation] = useState<SynoraReputationProfile | null>(null);
   const [synBalance, setSynBalance] = useState<string>("0");
-  const [status, setStatus] = useState<string>("Wallet non connecté");
+  const [status, setStatus] = useState<string>("Wallet non connectÃƒÂ©");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const savedToken = window.localStorage.getItem(SESSION_STORAGE_KEY);
+
+    if (!savedToken) {
+      return;
+    }
+
+    const token = savedToken;
+
+    let isMounted = true;
+
+    async function restoreSession() {
+      try {
+        setStatus("Restauration de la session...");
+
+        const authMeResponse = await getAuthenticatedUser(token);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setAuthToken(token);
+        setWalletAddress(authMeResponse.user.walletAddress);
+        setUser(authMeResponse.user);
+        setReputation(authMeResponse.reputation);
+
+        try {
+          const balance = await getSynBalance(authMeResponse.user.walletAddress);
+
+          if (isMounted) {
+            setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
+          }
+        } catch {
+          if (isMounted) {
+            setSynBalance("0");
+          }
+        }
+
+        setStatus("Session restaurÃƒÂ©e");
+      } catch {
+        window.localStorage.removeItem(SESSION_STORAGE_KEY);
+
+        if (isMounted) {
+          setStatus("Wallet non connectÃƒÂ©");
+        }
+      }
+    }
+
+    restoreSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const shortWallet = useMemo(() => {
     if (!walletAddress) {
-      return "Non connecté";
+      return "Non connectÃƒÂ©";
     }
 
     return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
@@ -88,7 +146,7 @@ export function WalletAuthCard() {
         throw new Error("MetaMask est introuvable.");
       }
 
-      setStatus("Connexion au réseau Base Sepolia...");
+      setStatus("Connexion au rÃƒÂ©seau Base Sepolia...");
       await ensureBaseSepoliaNetwork();
 
       setStatus("Connexion au wallet...");
@@ -100,7 +158,7 @@ export function WalletAuthCard() {
       const connectedWallet = accounts[0];
 
       if (!connectedWallet) {
-        throw new Error("Aucun wallet connecté.");
+        throw new Error("Aucun wallet connectÃƒÂ©.");
       }
 
       setWalletAddress(connectedWallet);
@@ -109,7 +167,7 @@ export function WalletAuthCard() {
       const balance = await getSynBalance(connectedWallet);
       setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
 
-      setStatus("Création du message de signature...");
+      setStatus("CrÃƒÂ©ation du message de signature...");
 
       const nonceResponse = await requestAuthNonce(connectedWallet);
 
@@ -120,7 +178,7 @@ export function WalletAuthCard() {
         params: [nonceResponse.message, connectedWallet],
       });
 
-      setStatus("Vérification de la signature...");
+      setStatus("VÃƒÂ©rification de la signature...");
 
       const verifyResponse = await verifyAuthSignature({
         walletAddress: connectedWallet,
@@ -128,10 +186,12 @@ export function WalletAuthCard() {
       });
 
       setAuthToken(verifyResponse.token);
+      window.localStorage.setItem(SESSION_STORAGE_KEY, verifyResponse.token);
+
       setUser(verifyResponse.user);
       setReputation(verifyResponse.reputation);
 
-      setStatus("Mise à jour de la réputation...");
+      setStatus("Mise ÃƒÂ  jour de la rÃƒÂ©putation...");
 
       const reputationResponse = await reportReputationEvent(
         {
@@ -146,8 +206,9 @@ export function WalletAuthCard() {
         level: reputationResponse.reputation.level,
         rewardsClaimed: reputationResponse.reputation.rewardsClaimed,
       });
+
       setReputation(reputationResponse.reputation);
-      setStatus("Authentifié avec succès");
+      setStatus("AuthentifiÃƒÂ© avec succÃƒÂ¨s");
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -155,7 +216,7 @@ export function WalletAuthCard() {
           : "Erreur inconnue pendant l'authentification.";
 
       setError(message);
-      setStatus("Échec de l'authentification");
+      setStatus("Ãƒâ€°chec de l'authentification");
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +235,7 @@ export function WalletAuthCard() {
       setStatus("Actualisation de la balance SYN...");
       const balance = await getSynBalance(walletAddress);
       setSynBalance(Number(balance.formattedBalance).toLocaleString("fr-FR"));
-      setStatus(authToken ? "Authentifié avec succès" : "Balance actualisée");
+      setStatus(authToken ? "AuthentifiÃƒÂ© avec succÃƒÂ¨s" : "Balance actualisÃƒÂ©e");
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
@@ -191,10 +252,11 @@ export function WalletAuthCard() {
   function disconnect() {
     setWalletAddress("");
     setAuthToken("");
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
     setUser(null);
     setReputation(null);
     setSynBalance("0");
-    setStatus("Wallet non connecté");
+    setStatus("Wallet non connectÃƒÂ©");
     setError("");
   }
 
@@ -206,11 +268,11 @@ export function WalletAuthCard() {
             Dashboard utilisateur
           </p>
 
-          <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et réputation</h2>
+          <h2 className="mt-3 text-3xl font-bold">Wallet, SYN et rÃƒÂ©putation</h2>
 
           <p className="mt-3 text-slate-300">
             SYNORA lit la balance SYN sur Base Sepolia, authentifie le wallet par signature,
-            puis met à jour le score de réputation via l’API.
+            puis met ÃƒÂ  jour le score de rÃƒÂ©putation via lÃ¢â‚¬â„¢API.
           </p>
         </div>
 
@@ -233,7 +295,7 @@ export function WalletAuthCard() {
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-sm text-slate-400">Session</p>
             <p className="mt-2 text-sm font-semibold">
-              {authToken ? "JWT reçu" : "Non authentifié"}
+              {authToken ? "JWT reÃƒÂ§u" : "Non authentifiÃƒÂ©"}
             </p>
           </div>
         </div>
@@ -251,12 +313,12 @@ export function WalletAuthCard() {
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">Récompenses</p>
+              <p className="text-sm text-slate-400">RÃƒÂ©compenses</p>
               <p className="mt-2 text-3xl font-bold">{user.rewardsClaimed}</p>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">Événements</p>
+              <p className="text-sm text-slate-400">Ãƒâ€°vÃƒÂ©nements</p>
               <p className="mt-2 text-3xl font-bold">{reputation?.eventsCount ?? 0}</p>
             </div>
           </div>
@@ -264,7 +326,7 @@ export function WalletAuthCard() {
 
         {reputation ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300">
-            Dernière mise à jour réputation :{" "}
+            DerniÃƒÂ¨re mise ÃƒÂ  jour rÃƒÂ©putation :{" "}
             <span className="font-mono text-cyan-300">{reputation.updatedAt}</span>
           </div>
         ) : null}
@@ -299,7 +361,7 @@ export function WalletAuthCard() {
             onClick={disconnect}
             className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
           >
-            Réinitialiser
+            RÃƒÂ©initialiser
           </button>
         </div>
       </div>
