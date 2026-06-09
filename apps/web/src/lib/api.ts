@@ -127,3 +127,21 @@ export function reportReputationEvent(
 export function getReputationEvents(walletAddress: string) {
   return getJson<ReputationEventsResponse>(`/reputation/${walletAddress}/events`);
 }
+export type RewardClaim = {
+  id: string;
+  walletAddress: string;
+  rewardType: "MVP_REWARD";
+  amount: number;
+  status: "CLAIMED";
+  createdAt: string;
+};
+
+export type RewardClaimResponse = {
+  rewardClaim: RewardClaim;
+  reputation: SynoraReputationProfile;
+  user: SynoraUser;
+};
+
+export function claimSynoraReward(token: string) {
+  return postJson<RewardClaimResponse>("/rewards/claim", {}, token);
+}

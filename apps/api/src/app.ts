@@ -9,7 +9,13 @@ import { getAddress, isAddress, verifyMessage } from "viem";
 import { z } from "zod";
 
 import { buildAuthMessage } from "./auth/messages.js";
+import { logger } from "./observability/logger.js";
 import { buildReputationProfile } from "./reputation/engine.js";
+import {
+  canClaimMvpReward,
+  createMvpRewardClaim,
+  getRecentRewardClaims,
+} from "./rewards/repository.js";
 import {
   addWalletEvent,
   deleteAuthNonce,
@@ -65,6 +71,13 @@ export function createSynoraApp() {
   const reputationEventRateLimit = rateLimit({
     windowMs: 5 * 60 * 1000,
     limit: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const rewardClaimRateLimit = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    limit: 10,
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -129,6 +142,7 @@ export function createSynoraApp() {
     const parsed = schema.safeParse(request.body);
 
     if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+      logger.warn("auth.nonce.invalid_wallet");
       return response.status(400).json({
         error: "INVALID_WALLET_ADDRESS",
       });
@@ -156,6 +170,8 @@ export function createSynoraApp() {
       issuedAt,
     });
 
+    logger.info("auth.nonce.created", { walletAddress });
+
     return response.json({
       walletAddress,
       nonce,
@@ -173,6 +189,7 @@ export function createSynoraApp() {
     const parsed = schema.safeParse(request.body);
 
     if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+      logger.warn("auth.verify.invalid_payload");
       return response.status(400).json({
         error: "INVALID_AUTH_PAYLOAD",
       });
@@ -182,6 +199,7 @@ export function createSynoraApp() {
     const nonceEntry = await getAuthNonce(walletAddress);
 
     if (!nonceEntry) {
+      logger.warn("auth.verify.nonce_not_found", { walletAddress });
       return response.status(400).json({
         error: "NONCE_NOT_FOUND",
       });
@@ -190,6 +208,7 @@ export function createSynoraApp() {
     if (Date.now() > nonceEntry.expiresAt) {
       await deleteAuthNonce(walletAddress);
 
+      logger.warn("auth.verify.nonce_expired", { walletAddress });
       return response.status(400).json({
         error: "NONCE_EXPIRED",
       });
@@ -209,6 +228,7 @@ export function createSynoraApp() {
     });
 
     if (!isValidSignature) {
+      logger.warn("auth.verify.invalid_signature", { walletAddress });
       return response.status(401).json({
         error: "INVALID_SIGNATURE",
       });
@@ -237,6 +257,8 @@ export function createSynoraApp() {
         ...jwtOptions,
       }
     );
+
+    logger.info("auth.verify.success", { walletAddress });
 
     return response.json({
       token,
@@ -296,6 +318,7 @@ export function createSynoraApp() {
       }),
     });
   });
+
   app.get("/reputation/:walletAddress/events", async (request, response) => {
     const walletAddressParam = request.params.walletAddress;
 
@@ -345,11 +368,108 @@ export function createSynoraApp() {
       createdAt: new Date().toISOString(),
     });
 
+    const reputationProfile = buildReputationProfile({
+      walletAddress: authenticatedWallet,
+      events,
+    });
+
+    logger.info("reputation.event.created", {
+      walletAddress: authenticatedWallet,
+      type: parsed.data.type,
+      score: reputationProfile.score,
+    });
+
     return response.json({
-      reputation: buildReputationProfile({
+      reputation: reputationProfile,
+    });
+  });
+
+  app.get("/rewards/:walletAddress", async (request, response) => {
+    const walletAddressParam = request.params.walletAddress;
+
+    if (!isAddress(walletAddressParam)) {
+      return response.status(400).json({
+        error: "INVALID_WALLET_ADDRESS",
+      });
+    }
+
+    const walletAddress = getAddress(walletAddressParam);
+    const claims = await getRecentRewardClaims(walletAddress);
+
+    return response.json({
+      walletAddress,
+      claims,
+    });
+  });
+
+  app.post("/rewards/claim", rewardClaimRateLimit, async (request, response) => {
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const eventsBeforeClaim = await getWalletEvents(authenticatedWallet);
+    const profileBeforeClaim = buildReputationProfile({
+      walletAddress: authenticatedWallet,
+      events: eventsBeforeClaim,
+    });
+
+    if (profileBeforeClaim.score < 60) {
+      logger.warn("rewards.claim.score_too_low", {
         walletAddress: authenticatedWallet,
-        events,
-      }),
+        score: profileBeforeClaim.score,
+      });
+
+      return response.status(403).json({
+        error: "REWARD_SCORE_TOO_LOW",
+      });
+    }
+
+    const claimEligibility = await canClaimMvpReward(authenticatedWallet);
+
+    if (!claimEligibility.allowed) {
+      logger.warn("rewards.claim.rejected", {
+        walletAddress: authenticatedWallet,
+        reason: claimEligibility.reason,
+      });
+
+      return response.status(409).json({
+        error: claimEligibility.reason ?? "REWARD_NOT_ALLOWED",
+      });
+    }
+
+    const rewardClaim = await createMvpRewardClaim(authenticatedWallet);
+
+    const eventsAfterClaim = await addWalletEvent(authenticatedWallet, {
+      type: "REWARD_CLAIMED",
+      value: rewardClaim.amount,
+      createdAt: rewardClaim.createdAt,
+    });
+
+    const reputationProfile = buildReputationProfile({
+      walletAddress: authenticatedWallet,
+      events: eventsAfterClaim,
+    });
+
+    logger.info("rewards.claim.created", {
+      walletAddress: authenticatedWallet,
+      rewardType: rewardClaim.rewardType,
+      amount: rewardClaim.amount,
+      score: reputationProfile.score,
+    });
+
+    return response.json({
+      rewardClaim,
+      reputation: reputationProfile,
+      user: {
+        walletAddress: authenticatedWallet,
+        score: reputationProfile.score,
+        level: reputationProfile.level,
+        rewardsClaimed: reputationProfile.rewardsClaimed,
+      },
     });
   });
 

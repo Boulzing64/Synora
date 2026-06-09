@@ -1,43 +1,60 @@
-# Récompenses MVP SYNORA
+# Rewards Beta SYNORA
 
 ## Objectif
 
-Ajouter un premier parcours de récompense utilisateur sans transaction on-chain.
+Remplacer le claim MVP simple par un module rewards dédié, persistant et contrôlé côté API.
 
-## Fonctionnement MVP
+## Endpoint
 
-Le dashboard permet un claim de récompense MVP si:
+POST /rewards/claim
 
-- le wallet est connecté
-- la signature wallet est validée
-- un JWT SYNORA est actif
-- le score réputation est supérieur ou égal à 60
+## Conditions
 
-Le claim crée un événement:
+- JWT valide
+- Wallet authentifié
+- Score réputation >= 60
+- Pas de claim MVP dans les dernières 24 heures
 
-REWARD_CLAIMED
+## Réponse
 
-Cet événement augmente:
+- rewardClaim
+- reputation
+- user
 
-- rewardsClaimed
-- eventsCount
-- score de réputation selon le moteur MVP
+## Table PostgreSQL
+
+reward_claims
+
+Colonnes:
+
+- id
+- wallet_address
+- reward_type
+- amount
+- status
+- created_at
+
+## Migration
+
+- 005_create_reward_claims
+
+## Récompense actuelle
+
+- rewardType: MVP_REWARD
+- amount: 10
+- status: CLAIMED
 
 ## Limites
 
-- Le claim est off-chain.
-- Aucun token SYN n'est transféré automatiquement.
-- Pas encore de contrat rewards.
-- Pas encore de limite temporelle par période.
-- Pas encore de preuve on-chain du claim.
+- Le claim reste off-chain.
+- Aucun transfert SYN automatique.
+- Pas encore de contrat RewardsDistributor.
+- Pas encore de signature backend pour claim on-chain.
 
 ## Prochaine évolution
 
-Créer un système rewards plus robuste:
-
-- table reward_claims
-- règles anti-abus
-- plafonds par wallet et période
-- contrat RewardsDistributor
-- signature backend pour autoriser un claim on-chain
-- dashboard historique des récompenses
+- Créer un contrat RewardsDistributor
+- Ajouter signature backend EIP-712
+- Ajouter période de claim configurable
+- Ajouter dashboard historique rewards dédié
+- Ajouter règles anti-abus plus fines

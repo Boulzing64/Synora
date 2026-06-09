@@ -1,6 +1,8 @@
 import { config } from "dotenv";
 
 import { createSynoraApp } from "./app.js";
+import { logger } from "./observability/logger.js";
+import { initializeRewardsStorage } from "./rewards/repository.js";
 import { initializeDatabase } from "./storage/repositories.js";
 
 config({ path: ".env.local" });
@@ -8,9 +10,10 @@ config({ path: ".env.local" });
 const apiPort = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 
 await initializeDatabase();
+await initializeRewardsStorage();
 
 const app = createSynoraApp();
 
 app.listen(apiPort, "0.0.0.0", () => {
-  console.log(`SYNORA API listening on http://localhost:${apiPort}`);
+  logger.info("server.started", { port: apiPort });
 });

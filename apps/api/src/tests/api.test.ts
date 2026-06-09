@@ -3,6 +3,7 @@ import request from "supertest";
 import { privateKeyToAccount } from "viem/accounts";
 
 import { createSynoraApp } from "../app.js";
+import { initializeRewardsStorage } from "../rewards/repository.js";
 import { initializeDatabase } from "../storage/repositories.js";
 
 process.env.JWT_SECRET = "synora_test_secret_minimum_32_characters";
@@ -12,6 +13,7 @@ delete process.env.DATABASE_URL;
 const app = createSynoraApp();
 
 await initializeDatabase();
+await initializeRewardsStorage();
 
 const account = privateKeyToAccount(
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
@@ -100,3 +102,18 @@ const rewardClaimResponse = await request(app)
 
 assert.equal(rewardClaimResponse.body.reputation.walletAddress, account.address);
 assert.ok(rewardClaimResponse.body.reputation.rewardsClaimed >= 1);
+const dedicatedRewardClaimResponse = await request(app)
+  .post("/rewards/claim")
+  .set("Authorization", `Bearer ${token}`)
+  .send({})
+  .expect(200);
+
+assert.equal(dedicatedRewardClaimResponse.body.rewardClaim.walletAddress, account.address);
+assert.equal(dedicatedRewardClaimResponse.body.rewardClaim.rewardType, "MVP_REWARD");
+assert.ok(dedicatedRewardClaimResponse.body.reputation.rewardsClaimed >= 1);
+
+await request(app)
+  .post("/rewards/claim")
+  .set("Authorization", `Bearer ${token}`)
+  .send({})
+  .expect(409);
