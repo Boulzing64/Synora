@@ -1,4 +1,4 @@
-import pg from "pg";
+﻿import pg from "pg";
 import type { Pool as PgPool } from "pg";
 import { getAddress } from "viem";
 
@@ -66,7 +66,7 @@ export async function initializeRewardsStorage() {
       WHERE version = $1
       LIMIT 1
     `,
-    ["005"]
+    ["007"]
   );
 
   if (existingMigration.rows.length === 0) {
@@ -97,13 +97,13 @@ export async function initializeRewardsStorage() {
           INSERT INTO schema_migrations(version, name)
           VALUES ($1, $2)
         `,
-        ["005", "create_reward_claims"]
+        ["007", "create_reward_claims"]
       );
 
       await client.query("COMMIT");
 
       logger.info("database.migration.applied", {
-        version: "005",
+        version: "007",
         name: "create_reward_claims",
       });
     } catch (error) {
