@@ -29,9 +29,7 @@ const text = {
     closedProposals: "Propositions cloturees",
     governanceVotes: "Votes DAO",
     governanceWeight: "Poids total DAO",
-    passed: "Adoptée",
-    rejected: "Rejetée",
-    expired: "Expirée",
+    
   },
   en: {
     title: "Analytics",
@@ -54,9 +52,7 @@ const text = {
     closedProposals: "Closed proposals",
     governanceVotes: "DAO votes",
     governanceWeight: "Total DAO weight",
-    passed: "Passed",
-    rejected: "Rejected",
-    expired: "Expired",
+    
   },
 } as const;
 
