@@ -236,3 +236,46 @@ export type StakingResponse = {
 export function getStakingProfile(walletAddress: string) {
   return getJson<StakingResponse>(`/staking/${walletAddress}`);
 }
+
+export type GovernanceProposal = {
+  id: string;
+  title: string;
+  description: string;
+  creatorWallet: string;
+  status: "ACTIVE";
+  votesFor: number;
+  votesAgainst: number;
+  createdAt: string;
+};
+
+export type GovernanceProposalsResponse = {
+  proposals: GovernanceProposal[];
+};
+
+export function getGovernanceProposals() {
+  return getJson<GovernanceProposalsResponse>("/governance/proposals");
+}
+
+export function createGovernanceProposal(params: {
+  title: string;
+  description: string;
+  creatorWallet: string;
+}) {
+  return postJson<{ proposal: GovernanceProposal }>("/governance/proposals", params);
+}
+
+export function voteGovernanceProposal(params: {
+  proposalId: string;
+  walletAddress: string;
+  choice: "FOR" | "AGAINST";
+  weight: number;
+}) {
+  return postJson<{ proposal: GovernanceProposal }>(
+    `/governance/proposals/${params.proposalId}/vote`,
+    {
+      walletAddress: params.walletAddress,
+      choice: params.choice,
+      weight: params.weight,
+    }
+  );
+}

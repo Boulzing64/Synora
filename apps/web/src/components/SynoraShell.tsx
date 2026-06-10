@@ -23,6 +23,7 @@ const navigation = [
   { href: "/analytics", labelFr: "Analytics", labelEn: "Analytics" },
   { href: "/staking", labelFr: "Staking", labelEn: "Staking" },
   { href: "/status", labelFr: "Statut", labelEn: "Status" },
+  { href: "/governance", labelFr: "Gouvernance", labelEn: "Governance" },
   
 ];
 
