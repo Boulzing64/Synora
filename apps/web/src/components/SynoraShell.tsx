@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
 import { HelpWidget } from "@/components/HelpWidget";
-import { InstallPwaButton } from "@/components/InstallPwaButton";
+
 
 type SynoraShellProps = {
   title: string;
@@ -58,9 +57,7 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
               <p className="mt-2 text-xs text-slate-400">MVP Beta</p>
             </Link>
 
-            <div className="mt-4">
-              <InstallPwaButton />
-            </div>
+            
 
             <nav className="mt-6 flex flex-col gap-2">
               {navigation.map((item) => (
@@ -132,9 +129,6 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
             ) : null}
           </div>
 
-          <div className="mb-6 md:hidden">
-          <InstallPwaButton />
-          </div>
 
           {children}
 
