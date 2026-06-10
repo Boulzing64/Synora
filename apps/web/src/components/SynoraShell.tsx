@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { HelpWidget } from "@/components/HelpWidget";
+import { InstallPwaButton } from "@/components/InstallPwaButton";
 
 type SynoraShellProps = {
   title: string;
@@ -20,9 +21,9 @@ const navigation = [
   { href: "/badges", labelFr: "Badges", labelEn: "Badges" },
   { href: "/rewards", labelFr: "Rewards", labelEn: "Rewards" },
   { href: "/reputation", labelFr: "Reputation", labelEn: "Reputation" },
-  { href: "/status", labelFr: "Statut", labelEn: "Status" },
   { href: "/analytics", labelFr: "Analytics", labelEn: "Analytics" },
   { href: "/staking", labelFr: "Staking", labelEn: "Staking" },
+  { href: "/status", labelFr: "Statut", labelEn: "Status" },
 ];
 
 export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
@@ -56,6 +57,10 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
               </p>
               <p className="mt-2 text-xs text-slate-400">MVP Beta</p>
             </Link>
+
+            <div className="mt-4">
+              <InstallPwaButton />
+            </div>
 
             <nav className="mt-6 flex flex-col gap-2">
               {navigation.map((item) => (
@@ -117,7 +122,9 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
               SYNORA MVP Beta
             </p>
 
-            <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl">{title}</h1>
+            <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl">
+              {title}
+            </h1>
 
             {subtitle ? (
               <p className="mt-6 max-w-3xl text-lg text-slate-300">{subtitle}</p>
