@@ -90,7 +90,10 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
               ))}
             </div>
 
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex items-center gap-2">
+            <div className="md:hidden">
+            <InstallPwaButton />
+            </div>
               <button
                 type="button"
                 onClick={() => changeLanguage("fr")}
