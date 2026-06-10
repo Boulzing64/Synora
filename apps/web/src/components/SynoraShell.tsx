@@ -43,7 +43,7 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto flex min-h-screen max-w-7xl">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl">
         <aside className="hidden w-64 shrink-0 border-r border-slate-800 bg-slate-950 p-6 md:block">
           <div className="sticky top-6">
             <Link
@@ -70,9 +70,9 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
           </div>
         </aside>
 
-        <section className="flex-1 px-6 py-8">
+        <section className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2 md:hidden">
+            <div className="flex max-w-full gap-2 overflow-x-auto pb-2 md:hidden">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
@@ -111,12 +111,12 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
             </div>
           </div>
 
-          <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl">
+          <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/80 p-5 shadow-2xl sm:p-8">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
               SYNORA MVP Beta
             </p>
 
-            <h1 className="text-4xl font-bold tracking-tight md:text-6xl">{title}</h1>
+            <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl">{title}</h1>
 
             {subtitle ? (
               <p className="mt-6 max-w-3xl text-lg text-slate-300">{subtitle}</p>
