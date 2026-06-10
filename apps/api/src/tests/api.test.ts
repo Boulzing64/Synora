@@ -123,3 +123,11 @@ await request(app)
   .expect(409);
 
 console.log("SYNORA API HTTP tests passed.");
+
+const badgesResponse = await request(app)
+  .get(`/badges/${account.address}`)
+  .expect(200);
+
+assert.equal(badgesResponse.body.walletAddress, account.address);
+assert.ok(Array.isArray(badgesResponse.body.badges));
+assert.ok(badgesResponse.body.badges.length > 0);

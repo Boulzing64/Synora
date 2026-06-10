@@ -1,3 +1,4 @@
+import { buildBadges } from "./badges/engine.js";
 import { config } from "dotenv";
 import crypto from "node:crypto";
 import cors from "cors";
@@ -542,6 +543,24 @@ export function createSynoraApp() {
 
     return response.json({
       leaderboard,
+    });
+  });
+    app.get("/badges/:walletAddress", async (request, response) => {
+    const walletAddressParam = request.params.walletAddress;
+
+    if (!isAddress(walletAddressParam)) {
+      return response.status(400).json({
+        error: "INVALID_WALLET_ADDRESS",
+      });
+    }
+
+    const walletAddress = getAddress(walletAddressParam);
+    const events = await getWalletEvents(walletAddress);
+    const badgesProfile = buildBadges(events);
+
+    return response.json({
+      walletAddress,
+      ...badgesProfile,
     });
   });
   return app;
