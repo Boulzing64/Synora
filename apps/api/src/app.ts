@@ -27,6 +27,7 @@ import {
   getWalletEvents,
   saveAuthNonce,
   getAnalytics,
+  getGovernanceVotersLeaderboard,
 } from "./storage/repositories.js";
 import {
   createGovernanceProposal,
@@ -801,6 +802,17 @@ export function createSynoraApp() {
     });
   });
 
+
+  app.get("/governance/leaderboard", async (request, response) => {
+    const limitParam = Number(request.query.limit ?? 10);
+    const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 50) : 10;
+
+    const leaderboard = await getGovernanceVotersLeaderboard(limit);
+
+    return response.json({
+      leaderboard,
+    });
+  });
   app.get("/governance/proposals", async (_request, response) => {
     return response.json({
       proposals: await listGovernanceProposals(),
@@ -915,6 +927,8 @@ export function createSynoraApp() {
 
   return app;
 }
+
+
 
 
 

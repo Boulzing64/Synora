@@ -803,6 +803,67 @@ export async function listStoredGovernanceVotes(proposalId: string) {
   }));
 }
 
+export async function getGovernanceVotersLeaderboard(limit = 10) {
+  const databasePool = getPool();
 
+  if (!databasePool) {
+    const votes = Array.from(memoryGovernanceVoteDetails.values()).flat();
+    const grouped = new Map<
+      string,
+      {
+        walletAddress: string;
+        votesCount: number;
+        totalWeight: number;
+        lastVoteAt: string;
+      }
+    >();
 
+    for (const vote of votes) {
+      const existing = grouped.get(vote.walletAddress);
+
+      if (!existing) {
+        grouped.set(vote.walletAddress, {
+          walletAddress: vote.walletAddress,
+          votesCount: 1,
+          totalWeight: vote.weight,
+          lastVoteAt: vote.createdAt,
+        });
+        continue;
+      }
+
+      existing.votesCount += 1;
+      existing.totalWeight += vote.weight;
+
+      if (new Date(vote.createdAt).getTime() > new Date(existing.lastVoteAt).getTime()) {
+        existing.lastVoteAt = vote.createdAt;
+      }
+    }
+
+    return Array.from(grouped.values())
+      .sort((a, b) => b.totalWeight - a.totalWeight)
+      .slice(0, limit);
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT
+        wallet_address,
+        COUNT(*)::INTEGER AS votes_count,
+        SUM(weight)::NUMERIC AS total_weight,
+        MAX(created_at) AS last_vote_at
+      FROM governance_votes
+      GROUP BY wallet_address
+      ORDER BY total_weight DESC, votes_count DESC, last_vote_at DESC
+      LIMIT $1
+    `,
+    [limit]
+  );
+
+  return result.rows.map((row) => ({
+    walletAddress: String(row.wallet_address),
+    votesCount: Number(row.votes_count),
+    totalWeight: Number(row.total_weight),
+    lastVoteAt: new Date(row.last_vote_at).toISOString(),
+  }));
+}
 

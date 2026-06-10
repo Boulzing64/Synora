@@ -320,3 +320,20 @@ export function getRewardClaims(walletAddress: string) {
   return getJson<RewardsHistoryResponse>(`/rewards/${walletAddress}`);
 }
 
+export type GovernanceVoterLeaderboardEntry = {
+  walletAddress: string;
+  votesCount: number;
+  totalWeight: number;
+  lastVoteAt: string;
+};
+
+export type GovernanceVotersLeaderboardResponse = {
+  leaderboard: GovernanceVoterLeaderboardEntry[];
+};
+
+export function getGovernanceVotersLeaderboard(limit = 10) {
+  return getJson<GovernanceVotersLeaderboardResponse>(
+    `/governance/leaderboard?limit=${limit}`
+  );
+}
+

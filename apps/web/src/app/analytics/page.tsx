@@ -31,7 +31,6 @@ const text = {
     governanceWeight: "Poids total DAO",
     uniqueGovernanceVoters: "Votants DAO uniques",
     averageGovernanceWeight: "Poids moyen des votes",
-    
   },
   en: {
     title: "Analytics",
@@ -56,7 +55,6 @@ const text = {
     governanceWeight: "Total DAO weight",
     uniqueGovernanceVoters: "Unique DAO voters",
     averageGovernanceWeight: "Average vote weight",
-    
   },
 } as const;
 
@@ -135,7 +133,6 @@ export default function AnalyticsPage() {
             <p className="mt-2 text-4xl font-bold">{analytics.totalRewardsClaimed}</p>
           </div>
 
-
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <p className="text-sm text-slate-400">{t.rewardClaims}</p>
             <p className="mt-2 text-4xl font-bold">{analytics.totalRewardClaims}</p>
@@ -148,89 +145,72 @@ export default function AnalyticsPage() {
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <p className="text-sm text-slate-400">{t.averageRewards}</p>
-            <p className="mt-2 text-4xl font-bold">
-              {analytics.averageRewardsPerUser.toFixed(2)}
-            </p>
+            <p className="mt-2 text-4xl font-bold">{analytics.averageRewardsPerUser.toFixed(2)}</p>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <p className="text-sm text-slate-400">{t.topScore}</p>
             <p className="mt-2 text-4xl font-bold">{analytics.topScore}</p>
           </div>
-          
+
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <p className="text-sm text-slate-400">{t.totalStaked}</p>
-          <p className="mt-2 text-4xl font-bold">
-          {analytics.totalStakedSyn} SYN
-          </p>
+            <p className="text-sm text-slate-400">{t.totalStaked}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalStakedSyn} SYN</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <p className="text-sm text-slate-400">{t.stakingStatus}</p>
-          <p className="mt-2 text-2xl font-bold">{analytics.stakingStatus}</p>
+            <p className="text-sm text-slate-400">{t.stakingStatus}</p>
+            <p className="mt-2 text-2xl font-bold">{analytics.stakingStatus}</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:col-span-3">
-          <p className="text-sm text-slate-400">{t.stakingContract}</p>
-          <p className="mt-2 break-all font-mono text-sm text-cyan-300">
-          {analytics.stakingContractAddress ?? "-"}
-          </p>
+            <p className="text-sm text-slate-400">{t.stakingContract}</p>
+            <p className="mt-2 break-all font-mono text-sm text-cyan-300">
+              {analytics.stakingContractAddress ?? "-"}
+            </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:col-span-2">
             <p className="text-sm text-slate-400">{t.synDistributed}</p>
-            <p className="mt-2 text-4xl font-bold">
-              {analytics.totalSynDistributed} SYN
-            </p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalSynDistributed} SYN</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-           <p className="text-sm text-slate-400">{t.governanceProposals}</p>
-           <p className="mt-2 text-4xl font-bold">
-             {analytics.totalGovernanceProposals}
-           </p>
-         </div>
+            <p className="text-sm text-slate-400">{t.governanceProposals}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalGovernanceProposals}</p>
+          </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-           <p className="text-sm text-slate-400">{t.activeProposals}</p>
-           <p className="mt-2 text-4xl font-bold">
-             {analytics.activeGovernanceProposals}
-           </p>
-         </div>
+            <p className="text-sm text-slate-400">{t.activeProposals}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.activeGovernanceProposals}</p>
+          </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <p className="text-sm text-slate-400">{t.closedProposals}</p>
-          <p className="mt-2 text-4xl font-bold">
-            {analytics.closedGovernanceProposals}
-           </p>
-         </div>
+            <p className="text-sm text-slate-400">{t.closedProposals}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.closedGovernanceProposals}</p>
+          </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-           <p className="text-sm text-slate-400">{t.governanceVotes}</p>
-           <p className="mt-2 text-4xl font-bold">
-            {analytics.totalGovernanceVotes}
-          </p>
-        </div>
+            <p className="text-sm text-slate-400">{t.governanceVotes}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalGovernanceVotes}</p>
+          </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-           <p className="text-sm text-slate-400">{t.governanceWeight}</p>
-           <p className="mt-2 text-4xl font-bold">
-             {analytics.totalGovernanceVotingWeight}
-             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">{t.uniqueGovernanceVoters}</p>
+            <p className="text-sm text-slate-400">{t.governanceWeight}</p>
             <p className="mt-2 text-4xl font-bold">
-             {analytics.uniqueGovernanceVoters}
-        </p>
-    </div>
+              {analytics.totalGovernanceVotingWeight}
+              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+                <p className="text-sm text-slate-400">{t.uniqueGovernanceVoters}</p>
+                <p className="mt-2 text-4xl font-bold">{analytics.uniqueGovernanceVoters}</p>
+              </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-             <p className="text-sm text-slate-400">{t.averageGovernanceWeight}</p>
-             <p className="mt-2 text-4xl font-bold">
-               {analytics.averageGovernanceVotingWeight.toFixed(2)}
+              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+                <p className="text-sm text-slate-400">{t.averageGovernanceWeight}</p>
+                <p className="mt-2 text-4xl font-bold">
+                  {analytics.averageGovernanceVotingWeight.toFixed(2)}
+                </p>
+              </div>
             </p>
-         </div>
-         </p>
-      </div>
-
+          </div>
         </div>
       ) : null}
     </SynoraShell>
