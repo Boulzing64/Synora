@@ -207,6 +207,9 @@ export function askAssistant(message: string) {
 }
 
 export type AnalyticsSummary = {
+  stakingContractAddress: string | null;
+  totalStakedSyn: string;
+  stakingStatus: string;
   totalWallets: number;
   totalEvents: number;
   totalRewardsClaimed: number;

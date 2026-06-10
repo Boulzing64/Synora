@@ -18,6 +18,9 @@ const text = {
     synDistributed: "SYN distribues",
     loading: "Chargement des analytics...",
     error: "Impossible de charger les analytics.",
+    totalStaked: "Total SYN stake",
+    stakingContract: "Contrat staking",
+    stakingStatus: "Statut staking",
   },
   en: {
     title: "Analytics",
@@ -29,6 +32,9 @@ const text = {
     synDistributed: "SYN distributed",
     loading: "Loading analytics...",
     error: "Unable to load analytics.",
+    totalStaked: "Total staked SYN",
+    stakingContract: "Staking contract",
+    stakingStatus: "Staking status",
   },
 } as const;
 
@@ -110,6 +116,25 @@ export default function AnalyticsPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <p className="text-sm text-slate-400">{t.topScore}</p>
             <p className="mt-2 text-4xl font-bold">{analytics.topScore}</p>
+          </div>
+          
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          <p className="text-sm text-slate-400">{t.totalStaked}</p>
+          <p className="mt-2 text-4xl font-bold">
+          {analytics.totalStakedSyn} SYN
+          </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          <p className="text-sm text-slate-400">{t.stakingStatus}</p>
+          <p className="mt-2 text-2xl font-bold">{analytics.stakingStatus}</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:col-span-3">
+          <p className="text-sm text-slate-400">{t.stakingContract}</p>
+          <p className="mt-2 break-all font-mono text-sm text-cyan-300">
+          {analytics.stakingContractAddress ?? "-"}
+          </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:col-span-2">
