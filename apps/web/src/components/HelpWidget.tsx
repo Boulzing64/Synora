@@ -144,6 +144,12 @@ export function HelpWidget() {
 
           <div className="mt-5 flex gap-2">
             <input
+            onKeyDown={(event) => {
+            if (event.key === "Enter") {
+            event.preventDefault();
+            submitCustomQuestion();
+           }
+         }}
               value={customQuestion}
               onChange={(event) => setCustomQuestion(event.target.value)}
               placeholder={t.placeholder}
