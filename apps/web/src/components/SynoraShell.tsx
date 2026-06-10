@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { HelpWidget } from "@/components/HelpWidget";
+
 type SynoraShellProps = {
   title: string;
   subtitle?: string;
@@ -12,13 +14,13 @@ type SynoraShellProps = {
 type Locale = "fr" | "en";
 
 const navigation = [
-  { href: "/badges", labelFr: "Badges", labelEn: "Badges" },
   { href: "/", labelFr: "Accueil", labelEn: "Home" },
   { href: "/dashboard", labelFr: "Dashboard", labelEn: "Dashboard" },
+  { href: "/leaderboard", labelFr: "Classement", labelEn: "Leaderboard" },
+  { href: "/badges", labelFr: "Badges", labelEn: "Badges" },
   { href: "/rewards", labelFr: "Rewards", labelEn: "Rewards" },
   { href: "/reputation", labelFr: "Reputation", labelEn: "Reputation" },
   { href: "/status", labelFr: "Statut", labelEn: "Status" },
-  { href: "/leaderboard", labelFr: "Classement", labelEn: "Leaderboard" },
 ];
 
 export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
@@ -43,11 +45,17 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
       <div className="mx-auto flex min-h-screen max-w-7xl">
         <aside className="hidden w-64 shrink-0 border-r border-slate-800 bg-slate-950 p-6 md:block">
           <div className="sticky top-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
-              SYNORA
-            </p>
+            <Link
+              href="/"
+              className="block rounded-2xl border border-cyan-400/40 bg-slate-900 p-4 transition hover:bg-slate-800"
+            >
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
+                SYNORA
+              </p>
+              <p className="mt-2 text-xs text-slate-400">MVP Beta</p>
+            </Link>
 
-            <nav className="mt-8 flex flex-col gap-2">
+            <nav className="mt-6 flex flex-col gap-2">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
@@ -117,6 +125,8 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
           {children}
         </section>
       </div>
+
+      <HelpWidget />
     </main>
   );
 }
