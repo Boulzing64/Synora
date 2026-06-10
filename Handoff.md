@@ -1,8 +1,23 @@
-# Handoff SYNORA
+# SYNORA — Handoff Complet
 
-## Etat actuel
+## Etat du projet
 
-SYNORA est un MVP Web3 fonctionnel déployé sur Base Sepolia avec authentification wallet, réputation persistante, rewards off-chain et on-chain, dashboard utilisateur, internationalisation FR/EN et leaderboard.
+Version actuelle :
+
+SYNORA Beta v0.1.0
+
+Statut :
+
+- Déployé
+- Fonctionnel
+- Beta testnet figée
+- Prêt pour collecte de feedback utilisateur
+
+Progression estimée :
+
+- MVP technique : 98 %
+- Beta publique : 93 %
+- V1 complète : 65 %
 
 ---
 
@@ -10,122 +25,186 @@ SYNORA est un MVP Web3 fonctionnel déployé sur Base Sepolia avec authentificat
 
 ### Frontend
 
+Plateforme :
+
+Vercel
+
+Technologie :
+
 - Next.js
-- Vercel
-- Sidebar de navigation
-- Dashboard utilisateur
+- TypeScript
+- Tailwind CSS
+
+Fonctionnalités :
+
+- Dashboard
+- Réputation
+- Rewards
+- Leaderboard
+- Badges
+- Analytics
+- Assistant IA
+- Staking (préparation V1)
 - Internationalisation FR / EN
-- Help Widget moderne
-- Responsive desktop/mobile
+- PWA
 
 ### Backend
 
+Plateforme :
+
+Render
+
+Technologie :
+
+- Node.js
 - Express
-- PostgreSQL Render
+- TypeScript
+
+Fonctionnalités :
+
+- Auth wallet
 - JWT
-- Authentification wallet par signature
-- Rate limiting
-- Helmet
-- CORS
-- Logs structurés
-- Tests automatisés
+- Nonces
+- Réputation
+- Rewards
+- Analytics
+- Assistant IA
+- API staking read-only
 
-### Blockchain
+### Base de données
 
-- Réseau : Base Sepolia
-- Chain ID : 84532
-
-### Contrats
-
-SYN Token
-
-- 0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916
-
-RewardsDistributor
-
-- 0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443
-
-Etat :
-
-- Déployé
-- Vérifié
-- Financé avec 1000 SYN
+PostgreSQL Render
 
 ---
 
-## Fonctionnalités terminées
+## Blockchain
 
-### Authentification
+### Réseau
 
-- Connexion MetaMask
-- Signature wallet
-- JWT persistant
-- Restauration de session
+Base Sepolia
 
-### Réputation
+### Contrats déployés
 
-- Profil utilisateur
-- Historique réputation
-- Score réputation
-- Niveaux réputation
-- Evénements persistants PostgreSQL
+#### SYN Token
 
-### Rewards
+Symbole :
 
-Off-chain :
+SYN
 
-- Claim MVP
-- Historique rewards
+Fonction :
 
-On-chain :
+Token principal SYNORA
 
-- Endpoint /rewards/authorize
-- Signatures EIP-712
-- RewardsDistributor.claimWithSignature
-- Claim on-chain depuis dashboard
-- Réception SYN validée
+#### RewardsDistributor
 
-### Dashboard
+Fonction :
 
-- Balance SYN
-- Wallet connecté
-- Statut session
-- Réputation
-- Historique
-- Rewards
+Distribution des rewards on-chain
 
-### Internationalisation
+Fonctionnalités :
 
-Pages traduites :
+- Signature EIP-712
+- Claim sécurisé
+- Anti double claim
 
-- Home
+### Contrat préparé
+
+#### SYNStaking
+
+Statut :
+
+Développé mais non déployé
+
+Fonctionnalités :
+
+- stake()
+- unstake()
+- stakedBalanceOf()
+- totalStaked()
+
+Tests :
+
+Validés
+
+Module Ignition :
+
+Préparé
+
+---
+
+## Authentification
+
+Méthode :
+
+Wallet signature
+
+Fonctionnalités :
+
+- MetaMask
+- Nonce unique
+- JWT
+- Session persistante
+
+---
+
+## Réputation
+
+Système actif
+
+Actions prises en compte :
+
+- Wallet authentifié
+- Dashboard visité
+- Balance SYN connectée
+- Reward réclamé
+
+Pages :
+
 - Dashboard
-- Rewards
 - Reputation
-- Status
-- Help Widget
+- Leaderboard
 
-### Leaderboard
+---
 
-Backend :
+## Rewards
 
-- GET /leaderboard
+### Off-chain
 
-Frontend :
+Actif
 
-- Page /leaderboard
-- Classement score
-- Classement rewards
-- Classement activité
+### On-chain
 
-### Badges
+Actif
 
-Backend :
+Contrat :
 
-- Moteur badges
-- Endpoint /badges/:walletAddress
+RewardsDistributor
 
-Badges disponibles :
+Workflow :
+
+- Autorisation backend
+- Signature
+- Claim Base Sepolia
+
+---
+
+## Leaderboard
+
+Actif
+
+Affiche :
+
+- Classement utilisateurs
+- Scores réputation
+- Activité
+
+---
+
+## Badges
+
+Actif
+
+Badges actuels :
 
 - Wallet Verified
 - Early Adopter
@@ -134,240 +213,171 @@ Badges disponibles :
 - On-chain Pioneer
 - Top Reputation
 
-Frontend :
+---
 
-- En cours d'intégration
+## Analytics
+
+Actif
+
+Page :
+
+/analytics
+
+Indicateurs :
+
+- Total wallets
+- Total événements
+- Total rewards claimés
+- Top score
+- SYN distribués
 
 ---
 
-## Tests validés
+## Assistant IA
 
-### API
+Actif
 
-- Auth wallet
-- JWT
-- Réputation
-- Rewards
-- Leaderboard
-- Badges
-
-### Frontend
-
-- Build Next.js
-- Navigation sidebar
-- Dashboard
-- Internationalisation
-
-### Blockchain
-
-- SYN Token
-- RewardsDistributor
-- Claim on-chain validé
-- Financement RewardsDistributor validé
-
----
-
-## Fonctionnalités en cours
-
-### Badges Frontend
-
-Etat :
-
-- API terminée
-- UI à terminer
-
-Objectif :
-
-- Affichage badges utilisateur
-- Etat verrouillé / débloqué
-- Intégration dashboard
-
----
-
-## Fonctionnalités prioritaires restantes
-
-### Priorité 1
-
-Badges utilisateur complets
-
-- Page badges
-- Intégration dashboard
-- Progression utilisateur
-
-### Priorité 2
-
-Assistant IA SYNORA
-
-- Remplacer Help Widget statique
-- API OpenAI
-- Réponses contextualisées
-- Support utilisateur
-
-### Priorité 3
-
-Staking SYN
-
-- Lock tokens
-- Récompenses staking
-- Préparation gouvernance
-
-### Priorité 4
-
-DAO SYNORA
-
-- Propositions
-- Vote
-- Délégation
-- Gouvernance on-chain
-
-### Priorité 5
-
-Analytics
-
-- Statistiques plateforme
-- Nombre wallets
-- Rewards distribués
-- Evolution réputation
-
----
-
-## Vision post-MVP
-
-Phase Beta
-
-- Badges
-- Assistant IA
-- Analytics
-
-Phase V1
-
-- Staking
-- Gouvernance
-- DAO
-
-Phase V2
-
-- IA comportementale
-- Réputation avancée
-- Recommandations intelligentes
-
----
-
-## Etat global
-
-SYNORA dispose aujourd'hui :
-
-- Auth wallet
-- Réputation persistante
-- Dashboard
-- Rewards off-chain
-- Rewards on-chain
-- Leaderboard
-- Internationalisation
-- Infrastructure cloud
-- Contrats déployés
-
-Le MVP Beta est opérationnel.
-
-## Assistant IA SYNORA
-
-### Etat
-
-Terminé et opérationnel.
-
-### Backend
-
-Endpoint :
+Route :
 
 POST /assistant/chat
 
 Fonctionnalités :
 
-- Intégration OpenAI
+- FR
+- EN
 - Réponses contextualisées SYNORA
-- Protection clé API côté serveur
-- Fallback automatique si OPENAI_API_KEY absente
+- OpenAI côté serveur
 
-Variables Render :
+Widget :
 
-OPENAI_API_KEY
-OPENAI_MODEL
+Disponible sur toutes les pages
 
-Modèle actuel :
+---
 
-gpt-4.1-mini
+## Internationalisation
 
-### Frontend
+Actif
 
-Composant :
+Langues :
 
-apps/web/src/components/HelpWidget.tsx
+- Français
+- Anglais
 
-Fonctionnalités :
+Commutateur :
 
-- Widget flottant moderne
-- Disponible sur toutes les pages
-- Support FR / EN
-- Questions prédéfinies
-- Questions libres
-- Envoi par bouton
-- Envoi par touche Entrée
-- Réponses dynamiques via API
+FR / EN
 
-### Cas d'usage
+---
 
-L'assistant peut aider sur :
+## Branding
 
-- Connexion wallet
-- Authentification
-- Réputation
-- Rewards
-- Claim on-chain
-- Base Sepolia
-- Navigation dashboard
+Actif
 
-### Sécurité
+Fichiers :
 
-L'assistant ne doit jamais :
+- favicon.ico
+- icon-192.png
+- icon-512.png
+- apple-touch-icon.png
+- logo.png
 
-- Demander une clé privée
-- Demander une seed phrase
-- Demander des informations sensibles
+Logo :
 
-### Evolutions futures
+SYNORA IA Futuriste
 
-Phase Beta :
+---
 
-- Historique conversation
-- Suggestions contextuelles
-- FAQ dynamique
+## PWA
 
-Phase V1 :
+Actif
 
-- Mémoire utilisateur
-- Analyse réputation
-- Recommandations personnalisées
+Manifest :
 
-Phase V2 :
+manifest.webmanifest
 
-- Assistant comportemental SYNORA
-- Coaching utilisateur
-- IA de réputation avancée
+Installation :
 
-### Etat global projet
+- Android
+- iPhone
 
-SYNORA Beta comprend désormais :
+---
 
-- Auth wallet
-- Réputation persistante
-- Dashboard
-- Rewards off-chain
-- Rewards on-chain
-- Leaderboard
-- Badges
-- Internationalisation FR/EN
-- Assistant IA
-- Infrastructure cloud complète
+## Sécurité
 
-Le MVP Beta est considéré comme fonctionnel et démontrable.
+Mesures en place :
+
+- JWT
+- Nonces
+- Helmet
+- CORS
+- Rate limiting
+- Secrets Render
+- Signature EIP-712
+
+Documentation :
+
+docs/security/beta-security-audit.md
+
+---
+
+## Documentation
+
+Disponible :
+
+- Handoff.md
+- docs/user/user-guide.md
+- docs/security/beta-security-audit.md
+- docs/beta-public-checklist.md
+- docs/beta-announcement.md
+- docs/staking/staking-spec.md
+
+---
+
+## Roadmap V1
+
+### Priorité 1
+
+Déploiement SYNStaking
+
+### Priorité 2
+
+Interface staking complète :
+
+- Approve
+- Stake
+- Unstake
+
+### Priorité 3
+
+Bonus réputation staking
+
+### Priorité 4
+
+Poids gouvernance
+
+### Priorité 5
+
+DAO SYNORA
+
+### Priorité 6
+
+Propositions on-chain
+
+### Priorité 7
+
+Vote délégué
+
+---
+
+## Commande de reprise
+
+Pour reprendre le projet :
+
+Etat actuel :
+
+SYNORA Beta v0.1.0 figée
+
+Prochaine tâche :
+
+Déploiement Base Sepolia du contrat SYNStaking puis intégration frontend complète.
 
