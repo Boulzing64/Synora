@@ -1,4 +1,5 @@
 {
   "SYNORAModule#SYNORA": "0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916",
-  "RewardsDistributorModule#RewardsDistributor": "0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443"
+  "RewardsDistributorModule#RewardsDistributor": "0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443",
+  "SYNStakingModule#SYNStaking": "0xc38a24038F27F478848a2C56823Af90A0b078d0e"
 }
