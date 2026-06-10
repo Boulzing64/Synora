@@ -7,7 +7,7 @@ export const translations = {
     english: "Anglais",
     dashboardTitle: "Wallet, SYN et reputation",
     dashboardSubtitle:
-      "SYNORA lit la balance SYN, authentifie le wallet, affiche la€™historique recent et permet un claim de recompense MVP off-chain.",
+      "SYNORA lit la balance SYN, authentifie le wallet, affiche laâ‚¬â„¢historique recent et permet un claim de recompense MVP off-chain.",
     wallet: "Wallet",
     balance: "Balance SYN",
     status: "Statut",
@@ -17,7 +17,7 @@ export const translations = {
     score: "Score",
     level: "Niveau",
     rewards: "Recompenses",
-    events: "Ã‰venements",
+    events: "Ãƒâ€°venements",
     recentHistory: "Historique recent",
     connectSign: "Connecter, lire SYN et signer",
     refreshBalance: "Actualiser balance",
@@ -25,7 +25,7 @@ export const translations = {
     testRewardsAuth: "Tester autorisation rewards",
     reset: "Reinitialiser",
     statusPage: "Voir le statut MVP",
-    statusTitle: "Ã‰tat du MVP SYNORA",
+    statusTitle: "Ãƒâ€°tat du MVP SYNORA",
     backDashboard: "Retour au dashboard",
   },
   en: {
