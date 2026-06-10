@@ -217,6 +217,9 @@ export type AnalyticsSummary = {
   totalRewardsClaimed: number;
   topScore: number;
   totalSynDistributed: number;
+  totalRewardClaims: number;
+  uniqueRewardClaimers: number;
+  averageRewardsPerUser: number;
 };
 
 export type AnalyticsResponse = {
@@ -309,4 +312,5 @@ export type RewardsHistoryResponse = {
 export function getRewardClaims(walletAddress: string) {
   return getJson<RewardsHistoryResponse>(`/rewards/${walletAddress}`);
 }
+
 

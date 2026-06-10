@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -16,6 +16,9 @@ const text = {
     rewards: "Rewards claims",
     topScore: "Top score",
     synDistributed: "SYN distribues",
+    rewardClaims: "Claims rewards",
+    uniqueClaimers: "Claimers uniques",
+    averageRewards: "Rewards / utilisateur",
     loading: "Chargement des analytics...",
     error: "Impossible de charger les analytics.",
     totalStaked: "Total SYN stake",
@@ -30,6 +33,9 @@ const text = {
     rewards: "Reward claims",
     topScore: "Top score",
     synDistributed: "SYN distributed",
+    rewardClaims: "Reward claims",
+    uniqueClaimers: "Unique claimers",
+    averageRewards: "Rewards / user",
     loading: "Loading analytics...",
     error: "Unable to load analytics.",
     totalStaked: "Total staked SYN",
@@ -113,6 +119,23 @@ export default function AnalyticsPage() {
             <p className="mt-2 text-4xl font-bold">{analytics.totalRewardsClaimed}</p>
           </div>
 
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.rewardClaims}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalRewardClaims}</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.uniqueClaimers}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.uniqueRewardClaimers}</p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.averageRewards}</p>
+            <p className="mt-2 text-4xl font-bold">
+              {analytics.averageRewardsPerUser.toFixed(2)}
+            </p>
+          </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
             <p className="text-sm text-slate-400">{t.topScore}</p>
             <p className="mt-2 text-4xl font-bold">{analytics.topScore}</p>
