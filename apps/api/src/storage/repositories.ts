@@ -332,3 +332,70 @@ export async function addWalletEvent(walletAddress: string, event: ReputationEve
 
   return getWalletEvents(normalizedWallet);
 }
+export async function getLeaderboard(limit = 20) {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return Array.from(memoryReputationEventsStore.entries())
+      .map(([walletAddress, events]) => {
+        const score = events.reduce((total, event) => {
+          if (event.type === "PROFILE_CREATED") return total + 10;
+          if (event.type === "WALLET_AUTHENTICATED") return total + 20;
+          if (event.type === "DASHBOARD_VISITED") return total + 5;
+          if (event.type === "SYN_BALANCE_CONNECTED") return total + 30;
+          if (event.type === "REWARD_CLAIMED") return total + 10;
+          return total;
+        }, 0);
+
+        const rewardsClaimed = events.filter((event) => event.type === "REWARD_CLAIMED").length;
+
+        return {
+          walletAddress,
+          score,
+          rewardsClaimed,
+          eventsCount: events.length,
+          updatedAt: events.at(-1)?.createdAt ?? new Date().toISOString(),
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT
+        wallet_address,
+        COUNT(*)::INTEGER AS events_count,
+        SUM(
+          CASE
+            WHEN type = 'PROFILE_CREATED' THEN 10
+            WHEN type = 'WALLET_AUTHENTICATED' THEN 20
+            WHEN type = 'DASHBOARD_VISITED' THEN 5
+            WHEN type = 'SYN_BALANCE_CONNECTED' THEN 30
+            WHEN type = 'REWARD_CLAIMED' THEN 10
+            ELSE 0
+          END
+        )::INTEGER AS score,
+        SUM(
+          CASE
+            WHEN type = 'REWARD_CLAIMED' THEN 1
+            ELSE 0
+          END
+        )::INTEGER AS rewards_claimed,
+        MAX(created_at) AS updated_at
+      FROM reputation_events
+      GROUP BY wallet_address
+      ORDER BY score DESC, rewards_claimed DESC, events_count DESC
+      LIMIT $1
+    `,
+    [limit]
+  );
+
+  return result.rows.map((row) => ({
+    walletAddress: String(row.wallet_address),
+    score: Number(row.score),
+    rewardsClaimed: Number(row.rewards_claimed),
+    eventsCount: Number(row.events_count),
+    updatedAt: new Date(row.updated_at).toISOString(),
+  }));
+}

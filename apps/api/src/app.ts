@@ -18,6 +18,7 @@ import {
   getRecentRewardClaims,
 } from "./rewards/repository.js";
 import {
+  getLeaderboard,
   addWalletEvent,
   deleteAuthNonce,
   getAuthNonce,
@@ -531,6 +532,17 @@ export function createSynoraApp() {
       },
     });
   });
+  app.get("/leaderboard", async (request, response) => {
+    const limitParam = Number(request.query.limit ?? 20);
+    const limit = Number.isFinite(limitParam)
+      ? Math.min(Math.max(limitParam, 1), 100)
+      : 20;
 
+    const leaderboard = await getLeaderboard(limit);
+
+    return response.json({
+      leaderboard,
+    });
+  });
   return app;
 }
