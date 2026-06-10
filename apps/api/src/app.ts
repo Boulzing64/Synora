@@ -9,11 +9,11 @@ import helmet from "helmet";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import { getAddress, isAddress, verifyMessage } from "viem";
 import { z } from "zod";
-
 import { buildAuthMessage } from "./auth/messages.js";
 import { logger } from "./observability/logger.js";
 import { buildReputationProfile } from "./reputation/engine.js";
 import { createRewardAuthorization } from "./rewards/authorization.js";
+import { createPublicClient, formatUnits, http } from "viem";
 import {
   canClaimMvpReward,
   createMvpRewardClaim,
@@ -39,6 +39,16 @@ export function createSynoraApp() {
   const jwtSecret = process.env.JWT_SECRET ?? "";
   const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
   const webOrigins = process.env.WEB_ORIGINS;
+
+  const stakingAbi = [
+  {
+    type: "function",
+    name: "totalStaked",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
 
   const allowedOrigins = [
     webOrigin,
@@ -589,8 +599,52 @@ export function createSynoraApp() {
     app.get("/analytics", async (_request, response) => {
     const analytics = await getAnalytics();
 
+    let totalStakedSyn = "0";
+    let stakingStatus = "NOT_CONFIGURED";
+
+    const stakingAddress = process.env.SYN_STAKING_ADDRESS;
+    const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+
+    if (stakingAddress && rpcUrl) {
+      try {
+        const client = createPublicClient({
+          chain: {
+            id: 84532,
+            name: "Base Sepolia",
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            rpcUrls: {
+              default: {
+                http: [rpcUrl],
+              },
+            },
+          },
+          transport: http(rpcUrl),
+        });
+
+        const totalStaked = await client.readContract({
+          address: stakingAddress as `0x${string}`,
+          abi: stakingAbi,
+          functionName: "totalStaked",
+        });
+
+        totalStakedSyn = formatUnits(totalStaked, 18);
+        stakingStatus = "ACTIVE";
+      } catch {
+        stakingStatus = "READ_ERROR";
+      }
+    }
+
     return response.json({
-      analytics,
+      analytics: {
+        ...analytics,
+        stakingContractAddress: stakingAddress ?? null,
+        totalStakedSyn,
+        stakingStatus,
+      },
     });
   });
   

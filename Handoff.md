@@ -1,121 +1,157 @@
 # SYNORA — Handoff Complet
 
-## Etat du projet
-
-Version actuelle :
+## Version
 
 SYNORA Beta v0.1.0
 
-Statut :
-
-- Déployé
-- Fonctionnel
-- Beta testnet figée
-- Prêt pour collecte de feedback utilisateur
-
-Progression estimée :
-
-- MVP technique : 98 %
-- Beta publique : 93 %
-- V1 complète : 65 %
+Dernière mise à jour : Juin 2026
 
 ---
 
-## Infrastructure
+# Etat global
 
-### Frontend
+Progression estimée :
 
-Plateforme :
+- Architecture : 100%
+- Backend : 95%
+- Frontend : 95%
+- Blockchain : 90%
+- Mobile Android : 80%
+- Gouvernance : 10%
+- IA avancée : 5%
 
-Vercel
+Progression totale :
 
-Technologie :
+≈ 85%
+
+---
+
+# Infrastructure
+
+## Frontend
+
+Technologies :
 
 - Next.js
 - TypeScript
 - Tailwind CSS
+- Viem
+
+Déploiement :
+
+- Vercel
+
+Pages :
+
+- /
+- /dashboard
+- /leaderboard
+- /badges
+- /rewards
+- /reputation
+- /analytics
+- /staking
+- /status
 
 Fonctionnalités :
 
-- Dashboard
-- Réputation
-- Rewards
-- Leaderboard
-- Badges
+- Responsive mobile
+- Responsive tablette
+- Responsive desktop
+- Internationalisation FR / EN
+- Wallet connecté
+- Dashboard utilisateur
 - Analytics
 - Assistant IA
-- Staking (préparation V1)
-- Internationalisation FR / EN
-- PWA
 
-### Backend
+---
 
-Plateforme :
+## Backend
 
-Render
-
-Technologie :
+Technologies :
 
 - Node.js
 - Express
 - TypeScript
 
+Déploiement :
+
+- Render
+
 Fonctionnalités :
 
-- Auth wallet
 - JWT
-- Nonces
-- Réputation
-- Rewards
-- Analytics
-- Assistant IA
-- API staking read-only
-
-### Base de données
-
-PostgreSQL Render
+- Wallet authentication
+- Nonce system
+- Reputation engine
+- Rewards engine
+- Analytics API
+- Assistant API
 
 ---
 
-## Blockchain
+## Base de données
 
-### Réseau
+PostgreSQL
+
+Statut :
+
+- Fonctionnel
+- Mode mémoire disponible en fallback
+
+---
+
+# Blockchain
+
+## Réseau
 
 Base Sepolia
 
-### Contrats déployés
+Chain ID :
 
-#### SYN Token
+84532
+
+---
+
+## SYN Token
 
 Symbole :
 
 SYN
 
-Fonction :
+Statut :
 
-Token principal SYNORA
+Déployé
 
-#### RewardsDistributor
+Fonctions :
 
-Fonction :
+- ERC20
+- Balance utilisateur
+- Intégration dashboard
 
-Distribution des rewards on-chain
+---
 
-Fonctionnalités :
-
-- Signature EIP-712
-- Claim sécurisé
-- Anti double claim
-
-### Contrat préparé
-
-#### SYNStaking
+## RewardsDistributor
 
 Statut :
 
-Développé mais non déployé
+Déployé
 
-Fonctionnalités :
+Fonctions :
+
+- Claim on-chain
+- Signatures EIP-712
+- Anti double claim
+
+---
+
+## SYNStaking
+
+Statut :
+
+Déployé sur Base Sepolia
+
+Fonctions :
 
 - stake()
 - unstake()
@@ -126,37 +162,43 @@ Tests :
 
 Validés
 
-Module Ignition :
+Frontend :
 
-Préparé
+Intégré
 
 ---
 
-## Authentification
+# Authentification
+
+Statut :
+
+Actif
 
 Méthode :
 
 Wallet signature
 
-Fonctionnalités :
+Fonctionnement :
 
-- MetaMask
-- Nonce unique
+- Nonce
+- Signature
 - JWT
 - Session persistante
 
 ---
 
-## Réputation
+# Réputation
 
-Système actif
+Statut :
 
-Actions prises en compte :
+Actif
 
-- Wallet authentifié
-- Dashboard visité
-- Balance SYN connectée
-- Reward réclamé
+Evénements :
+
+- Wallet connecté
+- SYN connecté
+- Rewards claimés
+- Activité dashboard
 
 Pages :
 
@@ -166,13 +208,13 @@ Pages :
 
 ---
 
-## Rewards
+# Rewards
 
-### Off-chain
+## Off-chain
 
 Actif
 
-### On-chain
+## On-chain
 
 Actif
 
@@ -182,25 +224,35 @@ RewardsDistributor
 
 Workflow :
 
-- Autorisation backend
-- Signature
-- Claim Base Sepolia
+- Backend autorise
+- Signature générée
+- Utilisateur claim
 
 ---
 
-## Leaderboard
+# Analytics
+
+Statut :
 
 Actif
 
-Affiche :
+Métriques :
 
-- Classement utilisateurs
-- Scores réputation
-- Activité
+- Wallets
+- Réputation
+- Rewards
+- Evénements
+- Scores
+
+Page :
+
+/analytics
 
 ---
 
-## Badges
+# Badges
+
+Statut :
 
 Actif
 
@@ -215,25 +267,9 @@ Badges actuels :
 
 ---
 
-## Analytics
+# Assistant IA
 
-Actif
-
-Page :
-
-/analytics
-
-Indicateurs :
-
-- Total wallets
-- Total événements
-- Total rewards claimés
-- Top score
-- SYN distribués
-
----
-
-## Assistant IA
+Statut :
 
 Actif
 
@@ -241,78 +277,73 @@ Route :
 
 POST /assistant/chat
 
-Fonctionnalités :
-
-- FR
-- EN
-- Réponses contextualisées SYNORA
-- OpenAI côté serveur
-
-Widget :
-
-Disponible sur toutes les pages
-
----
-
-## Internationalisation
-
-Actif
-
 Langues :
 
 - Français
 - Anglais
 
-Commutateur :
+Fonctions :
 
-FR / EN
-
----
-
-## Branding
-
-Actif
-
-Fichiers :
-
-- favicon.ico
-- icon-192.png
-- icon-512.png
-- apple-touch-icon.png
-- logo.png
-
-Logo :
-
-SYNORA IA Futuriste
+- Questions SYNORA
+- Wallet
+- Rewards
+- Reputation
+- Base Sepolia
 
 ---
+
+# Mobile
 
 ## PWA
 
-Actif
+Statut :
 
-Manifest :
+Fonctionnelle
 
-manifest.webmanifest
+Fonctions :
 
-Installation :
-
-- Android
-- iPhone
+- Manifest
+- Icônes
+- Icônes maskable
+- Apple Touch Icon
 
 ---
 
-## Sécurité
+## Android
 
-Mesures en place :
+Technologie :
+
+Capacitor
+
+Statut :
+
+Configuré
+
+Réalisé :
+
+- Projet Android créé
+- Android Studio configuré
+- Build Debug validé
+- Build Release validé
+- Keystore créé
+- APK release générée
+
+APK :
+
+android/app/build/outputs/apk/release/app-release.apk
+
+---
+
+# Sécurité
+
+Mesures :
 
 - JWT
-- Nonces
+- Nonce
 - Helmet
-- CORS
 - Rate limiting
-- Secrets Render
-- Signature EIP-712
+- CORS
+- Signatures EIP-712
 
 Documentation :
 
@@ -320,64 +351,122 @@ docs/security/beta-security-audit.md
 
 ---
 
-## Documentation
+# Documentation
 
 Disponible :
 
 - Handoff.md
-- docs/user/user-guide.md
-- docs/security/beta-security-audit.md
-- docs/beta-public-checklist.md
-- docs/beta-announcement.md
-- docs/staking/staking-spec.md
+- User Guide
+- Beta Checklist
+- Beta Announcement
+- Security Audit
+- Staking Deployment
 
 ---
 
-## Roadmap V1
+# Ce qui reste à faire
 
-### Priorité 1
+## Priorité 1
 
-Déploiement SYNStaking
+Validation complète du staking réel
 
-### Priorité 2
-
-Interface staking complète :
+Scénario :
 
 - Approve
 - Stake
 - Unstake
 
-### Priorité 3
+Validation :
 
-Bonus réputation staking
-
-### Priorité 4
-
-Poids gouvernance
-
-### Priorité 5
-
-DAO SYNORA
-
-### Priorité 6
-
-Propositions on-chain
-
-### Priorité 7
-
-Vote délégué
+- Wallet réel
+- Base Sepolia
 
 ---
 
-## Commande de reprise
+## Priorité 2
 
-Pour reprendre le projet :
+Bonus réputation staking
 
-Etat actuel :
+Objectif :
 
-SYNORA Beta v0.1.0 figée
+- Donner des points de réputation aux stakers
+
+---
+
+## Priorité 3
+
+Analytics staking
+
+Ajouter :
+
+- Total staké
+- Nombre de stakers
+- Activité staking
+
+---
+
+## Priorité 4
+
+Optimisation mobile
+
+Vérifications :
+
+- Dashboard
+- Analytics
+- Rewards
+- Staking
+
+---
+
+## Priorité 5
+
+Version v1.0.0
+
+Préparer :
+
+- Tests complets
+- Stabilisation
+- Documentation finale
+
+---
+
+## Priorité 6
+
+Gouvernance
+
+Préparer :
+
+- Voting power
+- Délégation
+- DAO
+
+---
+
+## Priorité 7
+
+IA avancée
+
+Evolution future :
+
+- Scoring comportemental
+- Détection d'abus
+- Recommandations personnalisées
+
+---
+
+# Etat de reprise
+
+Projet :
+
+SYNORA Beta v0.1.0
 
 Prochaine tâche :
 
-Déploiement Base Sepolia du contrat SYNStaking puis intégration frontend complète.
+Tester le staking réel sur Base Sepolia :
+
+1. Approve SYN
+2. Stake SYN
+3. Unstake SYN
+4. Vérifier mise à jour dashboard
+5. Vérifier mise à jour analytics
 
