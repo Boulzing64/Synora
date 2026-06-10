@@ -269,3 +269,105 @@ SYNORA dispose aujourd'hui :
 
 Le MVP Beta est opérationnel.
 
+## Assistant IA SYNORA
+
+### Etat
+
+Terminé et opérationnel.
+
+### Backend
+
+Endpoint :
+
+POST /assistant/chat
+
+Fonctionnalités :
+
+- Intégration OpenAI
+- Réponses contextualisées SYNORA
+- Protection clé API côté serveur
+- Fallback automatique si OPENAI_API_KEY absente
+
+Variables Render :
+
+OPENAI_API_KEY
+OPENAI_MODEL
+
+Modèle actuel :
+
+gpt-4.1-mini
+
+### Frontend
+
+Composant :
+
+apps/web/src/components/HelpWidget.tsx
+
+Fonctionnalités :
+
+- Widget flottant moderne
+- Disponible sur toutes les pages
+- Support FR / EN
+- Questions prédéfinies
+- Questions libres
+- Envoi par bouton
+- Envoi par touche Entrée
+- Réponses dynamiques via API
+
+### Cas d'usage
+
+L'assistant peut aider sur :
+
+- Connexion wallet
+- Authentification
+- Réputation
+- Rewards
+- Claim on-chain
+- Base Sepolia
+- Navigation dashboard
+
+### Sécurité
+
+L'assistant ne doit jamais :
+
+- Demander une clé privée
+- Demander une seed phrase
+- Demander des informations sensibles
+
+### Evolutions futures
+
+Phase Beta :
+
+- Historique conversation
+- Suggestions contextuelles
+- FAQ dynamique
+
+Phase V1 :
+
+- Mémoire utilisateur
+- Analyse réputation
+- Recommandations personnalisées
+
+Phase V2 :
+
+- Assistant comportemental SYNORA
+- Coaching utilisateur
+- IA de réputation avancée
+
+### Etat global projet
+
+SYNORA Beta comprend désormais :
+
+- Auth wallet
+- Réputation persistante
+- Dashboard
+- Rewards off-chain
+- Rewards on-chain
+- Leaderboard
+- Badges
+- Internationalisation FR/EN
+- Assistant IA
+- Infrastructure cloud complète
+
+Le MVP Beta est considéré comme fonctionnel et démontrable.
+
