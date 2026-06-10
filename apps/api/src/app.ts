@@ -31,6 +31,7 @@ import {
 import {
   createGovernanceProposal,
   listGovernanceProposals,
+  listGovernanceVotes,
   voteGovernanceProposal,
 } from "./governance/repository.js";
 
@@ -806,6 +807,15 @@ export function createSynoraApp() {
     });
   });
 
+
+  app.get("/governance/proposals/:proposalId/votes", async (request, response) => {
+    const proposal = await listGovernanceVotes(request.params.proposalId);
+
+    return response.json({
+      proposalId: request.params.proposalId,
+      votes: proposal,
+    });
+  });
   app.post("/governance/proposals", async (request, response) => {
     const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 
@@ -905,5 +915,6 @@ export function createSynoraApp() {
 
   return app;
 }
+
 
 

@@ -528,6 +528,15 @@ export type StoredGovernanceProposal = {
 
 const memoryGovernanceProposals = new Map<string, StoredGovernanceProposal>();
 const memoryGovernanceVotes = new Map<string, Set<string>>();
+const memoryGovernanceVoteDetails = new Map<
+  string,
+  Array<{
+    walletAddress: string;
+    choice: StoredGovernanceVoteChoice;
+    weight: number;
+    createdAt: string;
+  }>
+>();
 
 function mapGovernanceProposalRow(row: any): StoredGovernanceProposal {
   return {
@@ -686,6 +695,15 @@ export async function createStoredGovernanceVote(params: {
     const proposalVotes = memoryGovernanceVotes.get(params.proposalId) ?? new Set<string>();
     proposalVotes.add(normalizedWallet);
     memoryGovernanceVotes.set(params.proposalId, proposalVotes);
+
+    const proposalVoteDetails = memoryGovernanceVoteDetails.get(params.proposalId) ?? [];
+    proposalVoteDetails.push({
+      walletAddress: normalizedWallet,
+      choice: params.choice,
+      weight: params.weight,
+      createdAt: new Date().toISOString(),
+    });
+    memoryGovernanceVoteDetails.set(params.proposalId, proposalVoteDetails);
     return;
   }
 
@@ -696,5 +714,30 @@ export async function createStoredGovernanceVote(params: {
     `,
     [params.proposalId, normalizedWallet, params.choice, params.weight]
   );
+}
+
+export async function listStoredGovernanceVotes(proposalId: string) {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return memoryGovernanceVoteDetails.get(proposalId) ?? [];
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT wallet_address, choice, weight, created_at
+      FROM governance_votes
+      WHERE proposal_id = $1
+      ORDER BY created_at ASC
+    `,
+    [proposalId]
+  );
+
+  return result.rows.map((row) => ({
+    walletAddress: String(row.wallet_address),
+    choice: row.choice as StoredGovernanceVoteChoice,
+    weight: Number(row.weight),
+    createdAt: new Date(row.created_at).toISOString(),
+  }));
 }
 

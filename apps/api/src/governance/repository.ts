@@ -4,6 +4,7 @@
   getStoredGovernanceProposal,
   hasStoredGovernanceVote,
   listStoredGovernanceProposals,
+  listStoredGovernanceVotes,
   updateStoredGovernanceProposal,
   type StoredGovernanceProposal,
 } from "../storage/repositories.js";
@@ -127,4 +128,7 @@ export async function voteGovernanceProposal(params: {
   }
 
   return enrichGovernanceProposal(await updateStoredGovernanceProposal(proposal));
+}
+export async function listGovernanceVotes(proposalId: string) {
+  return listStoredGovernanceVotes(proposalId);
 }
