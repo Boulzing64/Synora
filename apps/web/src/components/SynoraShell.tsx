@@ -17,6 +17,7 @@ const navigation = [
   { href: "/rewards", labelFr: "Rewards", labelEn: "Rewards" },
   { href: "/reputation", labelFr: "Reputation", labelEn: "Reputation" },
   { href: "/status", labelFr: "Statut", labelEn: "Status" },
+  { href: "/leaderboard", labelFr: "Classement", labelEn: "Leaderboard" },
 ];
 
 export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {

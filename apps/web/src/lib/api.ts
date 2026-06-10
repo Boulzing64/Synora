@@ -161,3 +161,18 @@ export type RewardAuthorizationResponse = {
 export function requestRewardAuthorization(token: string) {
   return postJson<RewardAuthorizationResponse>("/rewards/authorize", {}, token);
 }
+export type LeaderboardEntry = {
+  walletAddress: string;
+  score: number;
+  rewardsClaimed: number;
+  eventsCount: number;
+  updatedAt: string;
+};
+
+export type LeaderboardResponse = {
+  leaderboard: LeaderboardEntry[];
+};
+
+export function getLeaderboard(limit = 20) {
+  return getJson<LeaderboardResponse>(`/leaderboard?limit=${limit}`);
+}
