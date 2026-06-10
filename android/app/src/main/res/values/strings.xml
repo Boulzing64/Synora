@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SYNORA</string>
+    <string name="title_activity_main">SYNORA</string>
+    <string name="package_name">com.synora.app</string>
+    <string name="custom_url_scheme">com.synora.app</string>
+</resources>

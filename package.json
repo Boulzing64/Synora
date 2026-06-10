@@ -1,34 +1,39 @@
 {
-    "name":  "synora",
-    "version":  "0.1.0",
-    "private":  true,
-    "description":  "SYNORA Web3 reputation and reward platform",
-    "license":  "MIT",
-    "workspaces":  [
-                       "apps/web",
-                       "apps/api",
-                       "contracts",
-                       "packages/shared",
-                       "packages/config"
-                   ],
-    "scripts":  {
-                    "dev:web":  "npm run dev -w apps/web",
-                    "dev:api":  "npm run dev -w apps/api",
-                    "dev:contracts":  "npm run dev -w contracts",
-                    "build":  "npm run build --workspaces --if-present",
-                    "test":  "npm run test --workspaces --if-present",
-                    "lint":  "npm run lint --workspaces --if-present",
-                    "format":  "prettier . --write",
-                    "format:check":  "prettier . --check",
-                    "build:api":  "npm run build -w apps/api",
-                    "build:web":  "npm run build -w apps/web",
-                    "test:reputation":  "npm run test:reputation -w apps/api",
-                    "verify:mvp":  "npm run build:api \u0026\u0026 npm run test:reputation \u0026\u0026 npm run test:api \u0026\u0026 npm run test:rewards-auth \u0026\u0026 npm run build:web",
-                    "test:api":  "npm run test:api -w apps/api",
-                    "test:rewards-auth":  "npm run test:rewards-auth -w apps/api"
-                },
-    "devDependencies":  {
-                            "prettier":  "^3.3.3",
-                            "typescript":  "^5.6.3"
-                        }
+    "name": "synora",
+    "version": "0.1.0",
+    "private": true,
+    "description": "SYNORA Web3 reputation and reward platform",
+    "license": "MIT",
+    "workspaces": [
+        "apps/web",
+        "apps/api",
+        "contracts",
+        "packages/shared",
+        "packages/config"
+    ],
+    "scripts": {
+        "dev:web": "npm run dev -w apps/web",
+        "dev:api": "npm run dev -w apps/api",
+        "dev:contracts": "npm run dev -w contracts",
+        "build": "npm run build --workspaces --if-present",
+        "test": "npm run test --workspaces --if-present",
+        "lint": "npm run lint --workspaces --if-present",
+        "format": "prettier . --write",
+        "format:check": "prettier . --check",
+        "build:api": "npm run build -w apps/api",
+        "build:web": "npm run build -w apps/web",
+        "test:reputation": "npm run test:reputation -w apps/api",
+        "verify:mvp": "npm run build:api && npm run test:reputation && npm run test:api && npm run test:rewards-auth && npm run build:web",
+        "test:api": "npm run test:api -w apps/api",
+        "test:rewards-auth": "npm run test:rewards-auth -w apps/api"
+    },
+    "devDependencies": {
+        "@capacitor/cli": "^8.4.0",
+        "prettier": "^3.3.3",
+        "typescript": "^5.6.3"
+    },
+    "dependencies": {
+        "@capacitor/android": "^8.4.0",
+        "@capacitor/core": "^8.4.0"
+    }
 }

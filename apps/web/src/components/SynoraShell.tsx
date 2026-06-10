@@ -23,6 +23,7 @@ const navigation = [
   { href: "/analytics", labelFr: "Analytics", labelEn: "Analytics" },
   { href: "/staking", labelFr: "Staking", labelEn: "Staking" },
   { href: "/status", labelFr: "Statut", labelEn: "Status" },
+  { href: "/download", labelFr: "Telecharger", labelEn: "Download" },
 ];
 
 export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
