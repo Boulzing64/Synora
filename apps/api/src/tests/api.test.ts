@@ -131,3 +131,13 @@ const badgesResponse = await request(app)
 assert.equal(badgesResponse.body.walletAddress, account.address);
 assert.ok(Array.isArray(badgesResponse.body.badges));
 assert.ok(badgesResponse.body.badges.length > 0);
+
+const analyticsResponse = await request(app)
+  .get("/analytics")
+  .expect(200);
+
+assert.ok(typeof analyticsResponse.body.analytics.totalWallets === "number");
+assert.ok(typeof analyticsResponse.body.analytics.totalEvents === "number");
+assert.ok(typeof analyticsResponse.body.analytics.totalRewardsClaimed === "number");
+assert.ok(typeof analyticsResponse.body.analytics.topScore === "number");
+assert.ok(typeof analyticsResponse.body.analytics.totalSynDistributed === "number");

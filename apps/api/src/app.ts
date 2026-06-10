@@ -26,6 +26,7 @@ import {
   getAuthNonce,
   getWalletEvents,
   saveAuthNonce,
+  getAnalytics,
 } from "./storage/repositories.js";
 
 export function createSynoraApp() {
@@ -584,5 +585,14 @@ export function createSynoraApp() {
       answer,
     });
   });
+
+    app.get("/analytics", async (_request, response) => {
+    const analytics = await getAnalytics();
+
+    return response.json({
+      analytics,
+    });
+  });
+  
   return app;
 }

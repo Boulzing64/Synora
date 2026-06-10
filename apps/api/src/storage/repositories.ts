@@ -399,3 +399,77 @@ export async function getLeaderboard(limit = 20) {
     updatedAt: new Date(row.updated_at).toISOString(),
   }));
 }
+
+export async function getAnalytics() {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    const allEvents = Array.from(memoryReputationEventsStore.values()).flat();
+    const walletAddresses = new Set(
+      Array.from(memoryReputationEventsStore.keys())
+    );
+
+    const totalRewardsClaimed = allEvents.filter(
+      (event) => event.type === "REWARD_CLAIMED"
+    ).length;
+
+    const topScore = Array.from(memoryReputationEventsStore.values()).reduce(
+      (highestScore, events) => {
+        const score = events.reduce((total, event) => {
+          if (event.type === "PROFILE_CREATED") return total + 10;
+          if (event.type === "WALLET_AUTHENTICATED") return total + 20;
+          if (event.type === "DASHBOARD_VISITED") return total + 5;
+          if (event.type === "SYN_BALANCE_CONNECTED") return total + 30;
+          if (event.type === "REWARD_CLAIMED") return total + 10;
+          return total;
+        }, 0);
+
+        return Math.max(highestScore, score);
+      },
+      0
+    );
+
+    return {
+      totalWallets: walletAddresses.size,
+      totalEvents: allEvents.length,
+      totalRewardsClaimed,
+      topScore,
+      totalSynDistributed: totalRewardsClaimed * 10,
+    };
+  }
+
+  const result = await databasePool.query(`
+    WITH wallet_scores AS (
+      SELECT
+        wallet_address,
+        SUM(
+          CASE
+            WHEN type = 'PROFILE_CREATED' THEN 10
+            WHEN type = 'WALLET_AUTHENTICATED' THEN 20
+            WHEN type = 'DASHBOARD_VISITED' THEN 5
+            WHEN type = 'SYN_BALANCE_CONNECTED' THEN 30
+            WHEN type = 'REWARD_CLAIMED' THEN 10
+            ELSE 0
+          END
+        )::INTEGER AS score
+      FROM reputation_events
+      GROUP BY wallet_address
+    )
+    SELECT
+      (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reputation_events) AS total_wallets,
+      (SELECT COUNT(*)::INTEGER FROM reputation_events) AS total_events,
+      (SELECT COUNT(*)::INTEGER FROM reputation_events WHERE type = 'REWARD_CLAIMED') AS total_rewards_claimed,
+      COALESCE((SELECT MAX(score)::INTEGER FROM wallet_scores), 0) AS top_score
+  `);
+
+  const row = result.rows[0];
+  const totalRewardsClaimed = Number(row.total_rewards_claimed);
+
+  return {
+    totalWallets: Number(row.total_wallets),
+    totalEvents: Number(row.total_events),
+    totalRewardsClaimed,
+    topScore: Number(row.top_score),
+    totalSynDistributed: totalRewardsClaimed * 10,
+  };
+}
