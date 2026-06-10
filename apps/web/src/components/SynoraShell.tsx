@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HelpWidget } from "@/components/HelpWidget";
 
 type SynoraShellProps = {
   title: string;
@@ -7,7 +8,7 @@ type SynoraShellProps = {
 };
 
 const navigation = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Accueil" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/rewards", label: "Rewards" },
   { href: "/reputation", label: "Reputation" },
@@ -22,6 +23,10 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
           <div className="sticky top-6">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-400">
               SYNORA
+            </p>
+
+            <p className="mt-3 text-sm text-slate-400">
+              Reputation Web3 et rewards SYN.
             </p>
 
             <nav className="mt-8 flex flex-col gap-2">
@@ -39,16 +44,35 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
         </aside>
 
         <section className="flex-1 px-6 py-8">
-          <div className="mb-6 flex flex-wrap gap-2 md:hidden">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-xl border border-slate-800 px-3 py-2 text-sm font-semibold text-slate-200"
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2 md:hidden">
+              {navigation.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-xl border border-slate-800 px-3 py-2 text-sm font-semibold text-slate-200"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="ml-auto flex gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-2">
+              <button
+                type="button"
+                className="rounded-xl bg-cyan-400 px-3 py-2 text-sm font-bold text-slate-950"
               >
-                {item.label}
-              </Link>
-            ))}
+                FR
+              </button>
+
+              <button
+                type="button"
+                className="rounded-xl px-3 py-2 text-sm font-bold text-slate-300 transition hover:bg-slate-800"
+                title="English version in progress"
+              >
+                EN
+              </button>
+            </div>
           </div>
 
           <div className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl">
@@ -66,6 +90,8 @@ export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
           {children}
         </section>
       </div>
+
+      <HelpWidget />
     </main>
   );
 }
