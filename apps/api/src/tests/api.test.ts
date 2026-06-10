@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import request from "supertest";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -122,6 +122,39 @@ await request(app)
   .send({})
   .expect(409);
 
+
+await request(app)
+  .post("/governance/proposals")
+  .send({
+    title: "Governance test proposal",
+    description: "This proposal must be rejected without authentication.",
+  })
+  .expect(401);
+
+await request(app)
+  .post("/governance/proposals/test-proposal-id/vote")
+  .send({
+    choice: "FOR",
+  })
+  .expect(401);
+
+await request(app)
+  .post("/governance/proposals")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    title: "Governance test proposal",
+    description: "This proposal must be rejected without enough staking.",
+  })
+  .expect(403);
+
+await request(app)
+  .post("/governance/proposals/test-proposal-id/vote")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    choice: "FOR",
+  })
+  .expect(403);
+
 console.log("SYNORA API HTTP tests passed.");
 
 const badgesResponse = await request(app)
@@ -150,3 +183,4 @@ assert.equal(stakingResponse.body.walletAddress, account.address);
 assert.equal(stakingResponse.body.stakedBalance, "0");
 assert.equal(stakingResponse.body.stakingScoreBoost, 0);
 assert.equal(stakingResponse.body.governanceWeight, 0);
+

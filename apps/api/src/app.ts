@@ -648,6 +648,76 @@ export function createSynoraApp() {
     });
   });
 
+  async function getStakingGovernanceProfile(walletAddress: string) {
+    let stakedBalance = "0";
+    let stakingScoreBoost = 0;
+    let governanceWeight = 0;
+    let status = "STAKING_CONTRACT_NOT_CONFIGURED";
+
+    const stakingAddress = process.env.SYN_STAKING_ADDRESS;
+    const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+
+    if (stakingAddress && rpcUrl) {
+      try {
+        const client = createPublicClient({
+          chain: {
+            id: 84532,
+            name: "Base Sepolia",
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            rpcUrls: {
+              default: {
+                http: [rpcUrl],
+              },
+            },
+          },
+          transport: http(rpcUrl),
+        });
+
+        const rawStakedBalance = await client.readContract({
+          address: stakingAddress as `0x${string}`,
+          abi: [
+            {
+              type: "function",
+              name: "stakedBalanceOf",
+              stateMutability: "view",
+              inputs: [{ name: "wallet", type: "address" }],
+              outputs: [{ name: "", type: "uint256" }],
+            },
+          ] as const,
+          functionName: "stakedBalanceOf",
+          args: [walletAddress as `0x${string}`],
+        });
+
+        const stakedSynNumber = Number(formatUnits(rawStakedBalance, 18));
+
+        stakedBalance = formatUnits(rawStakedBalance, 18);
+
+        if (stakedSynNumber >= 1000) {
+          stakingScoreBoost = 30;
+        } else if (stakedSynNumber >= 100) {
+          stakingScoreBoost = 15;
+        } else if (stakedSynNumber >= 1) {
+          stakingScoreBoost = 5;
+        }
+
+        governanceWeight = stakedSynNumber;
+        status = "ACTIVE";
+      } catch {
+        status = "READ_ERROR";
+      }
+    }
+
+    return {
+      stakedBalance,
+      stakingScoreBoost,
+      governanceWeight,
+      status,
+    };
+  }
   app.get("/staking/:walletAddress", async (request, response) => {
     const walletAddressParam = request.params.walletAddress;
 
@@ -744,6 +814,14 @@ export function createSynoraApp() {
         error: "UNAUTHORIZED",
       });
     }
+    const stakingProfile = await getStakingGovernanceProfile(authenticatedWallet);
+
+    if (stakingProfile.governanceWeight < 10) {
+      return response.status(403).json({
+        error: "INSUFFICIENT_STAKING_TO_PROPOSE",
+      });
+    }
+
     const schema = z.object({
       title: z.string().min(3).max(120),
       description: z.string().min(10).max(2000),
@@ -776,6 +854,14 @@ export function createSynoraApp() {
         error: "UNAUTHORIZED",
       });
     }
+    const stakingProfile = await getStakingGovernanceProfile(authenticatedWallet);
+
+    if (stakingProfile.governanceWeight <= 0) {
+      return response.status(403).json({
+        error: "INSUFFICIENT_STAKING_TO_VOTE",
+      });
+    }
+
     const schema = z.object({
       choice: z.enum(["FOR", "AGAINST"]),
     });
@@ -793,7 +879,7 @@ export function createSynoraApp() {
         proposalId: request.params.proposalId,
         walletAddress: authenticatedWallet,
         choice: parsed.data.choice,
-        weight: 1,
+        weight: stakingProfile.governanceWeight,
       });
 
       if (!proposal) {
@@ -818,3 +904,4 @@ export function createSynoraApp() {
 
   return app;
 }
+
