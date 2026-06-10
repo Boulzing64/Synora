@@ -10,7 +10,7 @@
 } from "../storage/repositories.js";
 
 export type GovernanceVoteChoice = "FOR" | "AGAINST";
-export type GovernanceProposalStatus = "ACTIVE" | "CLOSED";
+export type GovernanceProposalStatus = "ACTIVE" | "PASSED" | "REJECTED" | "EXPIRED";
 export type GovernanceProposal = StoredGovernanceProposal & {
   quorum: number;
   quorumReached: boolean;
@@ -41,14 +41,24 @@ function enrichGovernanceProposal(proposal: StoredGovernanceProposal): Governanc
 async function getProposalStatus(
   proposal: StoredGovernanceProposal
 ): Promise<GovernanceProposalStatus> {
-  if (proposal.status === "CLOSED") {
-    return "CLOSED";
+  if (proposal.status !== "ACTIVE") {
+    return proposal.status as GovernanceProposalStatus;
   }
 
   if (Date.now() >= new Date(proposal.expiresAt).getTime()) {
-    proposal.status = "CLOSED";
+    const totalVotes = proposal.votesFor + proposal.votesAgainst;
+    const quorumReached = totalVotes >= GOVERNANCE_QUORUM;
+
+    if (!quorumReached) {
+      proposal.status = "EXPIRED";
+    } else if (proposal.votesFor > proposal.votesAgainst) {
+      proposal.status = "PASSED";
+    } else {
+      proposal.status = "REJECTED";
+    }
+
     await updateStoredGovernanceProposal(proposal);
-    return "CLOSED";
+    return proposal.status as GovernanceProposalStatus;
   }
 
   return "ACTIVE";
@@ -132,3 +142,4 @@ export async function voteGovernanceProposal(params: {
 export async function listGovernanceVotes(proposalId: string) {
   return listStoredGovernanceVotes(proposalId);
 }
+

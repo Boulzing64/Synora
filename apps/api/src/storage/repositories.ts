@@ -532,7 +532,7 @@ export async function getAnalytics() {
 }
 
 export type StoredGovernanceVoteChoice = "FOR" | "AGAINST";
-export type StoredGovernanceProposalStatus = "ACTIVE" | "CLOSED";
+export type StoredGovernanceProposalStatus = "ACTIVE" | "PASSED" | "REJECTED" | "EXPIRED";
 
 export type StoredGovernanceProposal = {
   id: string;
@@ -760,7 +760,4 @@ export async function listStoredGovernanceVotes(proposalId: string) {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
-
-
-
 
