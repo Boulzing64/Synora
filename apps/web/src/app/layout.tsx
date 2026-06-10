@@ -16,11 +16,14 @@ export const metadata: Metadata = {
   title: "SYNORA",
   description: "Web3 reputation, rewards and AI assistant on Base Sepolia.",
   manifest: "/manifest.webmanifest",
-  themeColor: "#22d3ee",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
+};
+
+export const viewport = {
+  themeColor: "#22d3ee",
 };
 
 export default function RootLayout({
