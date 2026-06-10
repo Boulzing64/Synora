@@ -594,5 +594,25 @@ export function createSynoraApp() {
     });
   });
   
+    app.get("/staking/:walletAddress", async (request, response) => {
+    const walletAddressParam = request.params.walletAddress;
+
+    if (!isAddress(walletAddressParam)) {
+      return response.status(400).json({
+        error: "INVALID_WALLET_ADDRESS",
+      });
+    }
+
+    const walletAddress = getAddress(walletAddressParam);
+
+    return response.json({
+      walletAddress,
+      stakedBalance: "0",
+      stakingScoreBoost: 0,
+      governanceWeight: 0,
+      status: "STAKING_CONTRACT_READY_NOT_DEPLOYED",
+    });
+  });
+  
   return app;
 }

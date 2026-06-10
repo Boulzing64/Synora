@@ -141,3 +141,12 @@ assert.ok(typeof analyticsResponse.body.analytics.totalEvents === "number");
 assert.ok(typeof analyticsResponse.body.analytics.totalRewardsClaimed === "number");
 assert.ok(typeof analyticsResponse.body.analytics.topScore === "number");
 assert.ok(typeof analyticsResponse.body.analytics.totalSynDistributed === "number");
+
+const stakingResponse = await request(app)
+  .get(`/staking/${account.address}`)
+  .expect(200);
+
+assert.equal(stakingResponse.body.walletAddress, account.address);
+assert.equal(stakingResponse.body.stakedBalance, "0");
+assert.equal(stakingResponse.body.stakingScoreBoost, 0);
+assert.equal(stakingResponse.body.governanceWeight, 0);
