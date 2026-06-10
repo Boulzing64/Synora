@@ -24,6 +24,11 @@ const text = {
     totalStaked: "Total SYN stake",
     stakingContract: "Contrat staking",
     stakingStatus: "Statut staking",
+    governanceProposals: "Propositions DAO",
+    activeProposals: "Propositions actives",
+    closedProposals: "Propositions cloturees",
+    governanceVotes: "Votes DAO",
+    governanceWeight: "Poids total DAO",
   },
   en: {
     title: "Analytics",
@@ -41,6 +46,11 @@ const text = {
     totalStaked: "Total staked SYN",
     stakingContract: "Staking contract",
     stakingStatus: "Staking status",
+    governanceProposals: "DAO proposals",
+    activeProposals: "Active proposals",
+    closedProposals: "Closed proposals",
+    governanceVotes: "DAO votes",
+    governanceWeight: "Total DAO weight",
   },
 } as const;
 
@@ -166,6 +176,42 @@ export default function AnalyticsPage() {
               {analytics.totalSynDistributed} SYN
             </p>
           </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+           <p className="text-sm text-slate-400">{t.governanceProposals}</p>
+           <p className="mt-2 text-4xl font-bold">
+             {analytics.totalGovernanceProposals}
+           </p>
+         </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+           <p className="text-sm text-slate-400">{t.activeProposals}</p>
+           <p className="mt-2 text-4xl font-bold">
+             {analytics.activeGovernanceProposals}
+           </p>
+         </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+          <p className="text-sm text-slate-400">{t.closedProposals}</p>
+          <p className="mt-2 text-4xl font-bold">
+            {analytics.closedGovernanceProposals}
+           </p>
+         </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+           <p className="text-sm text-slate-400">{t.governanceVotes}</p>
+           <p className="mt-2 text-4xl font-bold">
+            {analytics.totalGovernanceVotes}
+          </p>
+        </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+           <p className="text-sm text-slate-400">{t.governanceWeight}</p>
+           <p className="mt-2 text-4xl font-bold">
+             {analytics.totalGovernanceVotingWeight}
+         </p>
+      </div>
+      
         </div>
       ) : null}
     </SynoraShell>

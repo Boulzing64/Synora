@@ -481,7 +481,18 @@ export async function getAnalytics() {
         events.some((event) => event.type === "REWARD_CLAIMED")
       ).length,
       averageRewardsPerUser:
-      uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
+        uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
+      totalGovernanceProposals: memoryGovernanceProposals.size,
+      activeGovernanceProposals: Array.from(memoryGovernanceProposals.values()).filter(
+        (proposal) => proposal.status === "ACTIVE"
+      ).length,
+      closedGovernanceProposals: Array.from(memoryGovernanceProposals.values()).filter(
+        (proposal) => proposal.status !== "ACTIVE"
+      ).length,
+      totalGovernanceVotes: Array.from(memoryGovernanceVoteDetails.values()).flat().length,
+      totalGovernanceVotingWeight: Array.from(memoryGovernanceVoteDetails.values())
+        .flat()
+        .reduce((total, vote) => total + vote.weight, 0),
     };
   }
 
@@ -508,13 +519,23 @@ export async function getAnalytics() {
       (SELECT COUNT(*)::INTEGER FROM reputation_events WHERE type = 'REWARD_CLAIMED') AS total_rewards_claimed,
       COALESCE((SELECT MAX(score)::INTEGER FROM wallet_scores), 0) AS top_score,
       (SELECT COUNT(*)::INTEGER FROM reward_claims) AS total_reward_claims,
-      (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reward_claims) AS unique_reward_claimers
+      (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reward_claims) AS unique_reward_claimers,
+      (SELECT COUNT(*)::INTEGER FROM governance_proposals) AS total_governance_proposals,
+      (SELECT COUNT(*)::INTEGER FROM governance_proposals WHERE status = 'ACTIVE') AS active_governance_proposals,
+      (SELECT COUNT(*)::INTEGER FROM governance_proposals WHERE status <> 'ACTIVE') AS closed_governance_proposals,
+      (SELECT COUNT(*)::INTEGER FROM governance_votes) AS total_governance_votes,
+      COALESCE((SELECT SUM(weight)::NUMERIC FROM governance_votes), 0) AS total_governance_voting_weight
   `);
 
   const row = result.rows[0];
   const totalRewardsClaimed = Number(row.total_rewards_claimed);
   const totalRewardClaims = Number(row.total_reward_claims ?? totalRewardsClaimed);
   const uniqueRewardClaimers = Number(row.unique_reward_claimers ?? 0);
+  const totalGovernanceProposals = Number(row.total_governance_proposals ?? 0);
+  const activeGovernanceProposals = Number(row.active_governance_proposals ?? 0);
+  const closedGovernanceProposals = Number(row.closed_governance_proposals ?? 0);
+  const totalGovernanceVotes = Number(row.total_governance_votes ?? 0);
+  const totalGovernanceVotingWeight = Number(row.total_governance_voting_weight ?? 0);
 
   return {
     totalWallets: Number(row.total_wallets),
@@ -527,7 +548,18 @@ export async function getAnalytics() {
         events.some((event) => event.type === "REWARD_CLAIMED")
       ).length,
       averageRewardsPerUser:
-      uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
+        uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
+      totalGovernanceProposals: memoryGovernanceProposals.size,
+      activeGovernanceProposals: Array.from(memoryGovernanceProposals.values()).filter(
+        (proposal) => proposal.status === "ACTIVE"
+      ).length,
+      closedGovernanceProposals: Array.from(memoryGovernanceProposals.values()).filter(
+        (proposal) => proposal.status !== "ACTIVE"
+      ).length,
+      totalGovernanceVotes: Array.from(memoryGovernanceVoteDetails.values()).flat().length,
+      totalGovernanceVotingWeight: Array.from(memoryGovernanceVoteDetails.values())
+        .flat()
+        .reduce((total, vote) => total + vote.weight, 0),
   };
 }
 
@@ -760,4 +792,5 @@ export async function listStoredGovernanceVotes(proposalId: string) {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
+
 
