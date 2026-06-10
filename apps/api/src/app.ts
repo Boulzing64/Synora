@@ -892,9 +892,10 @@ export function createSynoraApp() {
         proposal,
       });
     } catch (caughtError) {
-      if (caughtError instanceof Error && caughtError.message === "WALLET_ALREADY_VOTED") {
+      if (caughtError instanceof Error &&
+        ["WALLET_ALREADY_VOTED", "GOVERNANCE_PROPOSAL_CLOSED"].includes(caughtError.message)) {
         return response.status(409).json({
-          error: "WALLET_ALREADY_VOTED",
+          error: caughtError.message,
         });
       }
 
