@@ -261,7 +261,47 @@ export default function GovernancePage() {
                             : t.expired}
                     </span>
                   </div>
+                  {(() => {
+                    const total = proposal.votesFor + proposal.votesAgainst;
+                    const forPercent = total > 0 ? (proposal.votesFor / total) * 100 : 0;
+                    const againstPercent = total > 0 ? (proposal.votesAgainst / total) * 100 : 0;
+                    const quorumPercent = Math.min(
+                      100,
+                      (proposal.totalVotes / proposal.quorum) * 100
+                    );
 
+                    return (
+                      <div className="mt-4 space-y-3">
+                        <div>
+                          <div className="mb-1 flex justify-between text-xs text-slate-400">
+                            <span>Quorum</span>
+                            <span>
+                              {proposal.totalVotes}/{proposal.quorum}
+                            </span>
+                          </div>
+
+                          <div className="h-3 overflow-hidden rounded-full bg-slate-800">
+                            <div
+                              className="h-full bg-cyan-400"
+                              style={{ width: `${quorumPercent}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="mb-1 flex justify-between text-xs text-slate-400">
+                            <span>FOR {forPercent.toFixed(1)}%</span>
+                            <span>AGAINST {againstPercent.toFixed(1)}%</span>
+                          </div>
+
+                          <div className="flex h-3 overflow-hidden rounded-full bg-slate-800">
+                            <div className="bg-emerald-500" style={{ width: `${forPercent}%` }} />
+                            <div className="bg-red-500" style={{ width: `${againstPercent}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
                     <div className="rounded-xl border border-slate-800 p-3">
                       {t.for}: {proposal.votesFor}
