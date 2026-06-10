@@ -131,6 +131,11 @@ export type RewardClaim = {
   amount: number;
   status: "CLAIMED";
   createdAt: string;
+  expiresAt: string;
+  quorum: number;
+  quorumReached: boolean;
+  totalVotes: number;
+  remainingSeconds: number;
 };
 
 export type RewardClaimResponse = {
@@ -239,10 +244,15 @@ export type GovernanceProposal = {
   title: string;
   description: string;
   creatorWallet: string;
-  status: "ACTIVE";
+  status: "ACTIVE" | "CLOSED";
   votesFor: number;
   votesAgainst: number;
   createdAt: string;
+  expiresAt: string;
+  quorum: number;
+  quorumReached: boolean;
+  totalVotes: number;
+  remainingSeconds: number;
 };
 
 export type GovernanceProposalsResponse = {
@@ -274,3 +284,20 @@ export function voteGovernanceProposal(params: {
     }
   );
 }
+
+export type GovernanceVote = {
+  walletAddress: string;
+  choice: "FOR" | "AGAINST";
+  weight: number;
+  createdAt: string;
+};
+
+export type GovernanceVotesResponse = {
+  proposalId: string;
+  votes: GovernanceVote[];
+};
+
+export function getGovernanceVotes(proposalId: string) {
+  return getJson<GovernanceVotesResponse>(`/governance/proposals/${proposalId}/votes`);
+}
+
