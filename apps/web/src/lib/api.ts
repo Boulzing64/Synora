@@ -176,3 +176,22 @@ export type LeaderboardResponse = {
 export function getLeaderboard(limit = 20) {
   return getJson<LeaderboardResponse>(`/leaderboard?limit=${limit}`);
 }
+
+export type SynoraBadge = {
+  id: string;
+  label: string;
+  description: string;
+  unlocked: boolean;
+};
+
+export type BadgesResponse = {
+  walletAddress: string;
+  score: number;
+  rewardsClaimed: number;
+  unlockedCount: number;
+  badges: SynoraBadge[];
+};
+
+export function getBadges(walletAddress: string) {
+  return getJson<BadgesResponse>(`/badges/${walletAddress}`);
+}

@@ -12,6 +12,7 @@ type SynoraShellProps = {
 type Locale = "fr" | "en";
 
 const navigation = [
+  { href: "/badges", labelFr: "Badges", labelEn: "Badges" },
   { href: "/", labelFr: "Accueil", labelEn: "Home" },
   { href: "/dashboard", labelFr: "Dashboard", labelEn: "Dashboard" },
   { href: "/rewards", labelFr: "Rewards", labelEn: "Rewards" },
