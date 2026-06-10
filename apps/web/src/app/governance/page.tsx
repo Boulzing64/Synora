@@ -124,7 +124,7 @@ export default function GovernancePage() {
         proposalId,
         walletAddress: voterWallet,
         choice,
-});
+      });
 
       await loadProposals();
     } catch {

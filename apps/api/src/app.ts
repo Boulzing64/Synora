@@ -46,14 +46,14 @@ export function createSynoraApp() {
   const webOrigins = process.env.WEB_ORIGINS;
 
   const stakingAbi = [
-  {
-    type: "function",
-    name: "totalStaked",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-] as const;
+    {
+      type: "function",
+      name: "totalStaked",
+      stateMutability: "view",
+      inputs: [],
+      outputs: [{ name: "", type: "uint256" }],
+    },
+  ] as const;
 
   const allowedOrigins = [
     webOrigin,
@@ -208,7 +208,7 @@ export function createSynoraApp() {
 
     const parsed = schema.safeParse(request.body);
 
-    if (!parsed.success) {
+    if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
       logger.warn("auth.verify.invalid_payload");
       return response.status(400).json({
         error: "INVALID_AUTH_PAYLOAD",
@@ -353,10 +353,7 @@ export function createSynoraApp() {
 
     return response.json({
       walletAddress,
-      events: events
-        .slice()
-        .reverse()
-        .slice(0, 20),
+      events: events.slice().reverse().slice(0, 20),
     });
   });
 
@@ -552,9 +549,7 @@ export function createSynoraApp() {
   });
   app.get("/leaderboard", async (request, response) => {
     const limitParam = Number(request.query.limit ?? 20);
-    const limit = Number.isFinite(limitParam)
-      ? Math.min(Math.max(limitParam, 1), 100)
-      : 20;
+    const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 100) : 20;
 
     const leaderboard = await getLeaderboard(limit);
 
@@ -562,7 +557,7 @@ export function createSynoraApp() {
       leaderboard,
     });
   });
-    app.get("/badges/:walletAddress", async (request, response) => {
+  app.get("/badges/:walletAddress", async (request, response) => {
     const walletAddressParam = request.params.walletAddress;
 
     if (!isAddress(walletAddressParam)) {
@@ -581,7 +576,7 @@ export function createSynoraApp() {
     });
   });
 
-    app.post("/assistant/chat", async (request, response) => {
+  app.post("/assistant/chat", async (request, response) => {
     const schema = z.object({
       message: z.string().min(1).max(1000),
     });
@@ -601,7 +596,7 @@ export function createSynoraApp() {
     });
   });
 
-    app.get("/analytics", async (_request, response) => {
+  app.get("/analytics", async (_request, response) => {
     const analytics = await getAnalytics();
 
     let totalStakedSyn = "0";
@@ -652,8 +647,8 @@ export function createSynoraApp() {
       },
     });
   });
-  
-      app.get("/staking/:walletAddress", async (request, response) => {
+
+  app.get("/staking/:walletAddress", async (request, response) => {
     const walletAddressParam = request.params.walletAddress;
 
     if (!isAddress(walletAddressParam)) {
@@ -735,15 +730,14 @@ export function createSynoraApp() {
     });
   });
 
-    app.get("/governance/proposals", async (_request, response) => {
+  app.get("/governance/proposals", async (_request, response) => {
     return response.json({
       proposals: listGovernanceProposals(),
     });
   });
 
   app.post("/governance/proposals", async (request, response) => {
-    const authenticatedWallet =
-      getAuthenticatedWallet(request.headers.authorization);
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 
     if (!authenticatedWallet) {
       return response.status(401).json({
@@ -753,7 +747,6 @@ export function createSynoraApp() {
     const schema = z.object({
       title: z.string().min(3).max(120),
       description: z.string().min(10).max(2000),
-      
     });
 
     const parsed = schema.safeParse(request.body);
@@ -776,8 +769,7 @@ export function createSynoraApp() {
   });
 
   app.post("/governance/proposals/:proposalId/vote", async (request, response) => {
-    const authenticatedWallet =
-      getAuthenticatedWallet(request.headers.authorization);
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 
     if (!authenticatedWallet) {
       return response.status(401).json({
@@ -814,10 +806,7 @@ export function createSynoraApp() {
         proposal,
       });
     } catch (caughtError) {
-      if (
-        caughtError instanceof Error &&
-        caughtError.message === "WALLET_ALREADY_VOTED"
-      ) {
+      if (caughtError instanceof Error && caughtError.message === "WALLET_ALREADY_VOTED") {
         return response.status(409).json({
           error: "WALLET_ALREADY_VOTED",
         });
@@ -826,8 +815,6 @@ export function createSynoraApp() {
       throw caughtError;
     }
   });
-  
+
   return app;
 }
-
-

@@ -104,10 +104,7 @@ export function requestAuthNonce(walletAddress: string) {
   });
 }
 
-export function verifyAuthSignature(params: {
-  walletAddress: string;
-  signature: string;
-}) {
+export function verifyAuthSignature(params: { walletAddress: string; signature: string }) {
   return postJson<AuthVerifyResponse>("/auth/verify", params);
 }
 
@@ -229,7 +226,8 @@ export type StakingResponse = {
   walletAddress: string;
   stakedBalance: string;
   stakingScoreBoost: number;
-  governanceWeight: number; status: string;
+  governanceWeight: number;
+  status: string;
 };
 
 export function getStakingProfile(walletAddress: string) {
@@ -273,7 +271,6 @@ export function voteGovernanceProposal(params: {
     {
       walletAddress: params.walletAddress,
       choice: params.choice,
-}
+    }
   );
 }
-
