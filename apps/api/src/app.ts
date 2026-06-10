@@ -1,3 +1,4 @@
+import { askSynoraAssistant } from "./assistant/service.js";
 import { buildBadges } from "./badges/engine.js";
 import { config } from "dotenv";
 import crypto from "node:crypto";
@@ -561,6 +562,26 @@ export function createSynoraApp() {
     return response.json({
       walletAddress,
       ...badgesProfile,
+    });
+  });
+
+    app.post("/assistant/chat", async (request, response) => {
+    const schema = z.object({
+      message: z.string().min(1).max(1000),
+    });
+
+    const parsed = schema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return response.status(400).json({
+        error: "INVALID_ASSISTANT_MESSAGE",
+      });
+    }
+
+    const answer = await askSynoraAssistant(parsed.data.message);
+
+    return response.json({
+      answer,
     });
   });
   return app;
