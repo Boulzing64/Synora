@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SYNORA",
   description: "Web3 reputation, rewards and AI assistant on Base Sepolia.",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#22d3ee",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
