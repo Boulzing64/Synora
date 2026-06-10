@@ -493,6 +493,18 @@ export async function getAnalytics() {
       totalGovernanceVotingWeight: Array.from(memoryGovernanceVoteDetails.values())
         .flat()
         .reduce((total, vote) => total + vote.weight, 0),
+      uniqueGovernanceVoters: new Set(
+        Array.from(memoryGovernanceVoteDetails.values())
+          .flat()
+          .map((vote) => vote.walletAddress)
+      ).size,
+      averageGovernanceVotingWeight:
+        Array.from(memoryGovernanceVoteDetails.values()).flat().length > 0
+          ? Array.from(memoryGovernanceVoteDetails.values())
+              .flat()
+              .reduce((total, vote) => total + vote.weight, 0) /
+            Array.from(memoryGovernanceVoteDetails.values()).flat().length
+          : 0,
     };
   }
 
@@ -524,7 +536,9 @@ export async function getAnalytics() {
       (SELECT COUNT(*)::INTEGER FROM governance_proposals WHERE status = 'ACTIVE') AS active_governance_proposals,
       (SELECT COUNT(*)::INTEGER FROM governance_proposals WHERE status <> 'ACTIVE') AS closed_governance_proposals,
       (SELECT COUNT(*)::INTEGER FROM governance_votes) AS total_governance_votes,
-      COALESCE((SELECT SUM(weight)::NUMERIC FROM governance_votes), 0) AS total_governance_voting_weight
+      COALESCE((SELECT SUM(weight)::NUMERIC FROM governance_votes), 0) AS total_governance_voting_weight,
+      (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM governance_votes) AS unique_governance_voters,
+      COALESCE((SELECT AVG(weight)::NUMERIC FROM governance_votes), 0) AS average_governance_voting_weight
   `);
 
   const row = result.rows[0];
@@ -536,6 +550,8 @@ export async function getAnalytics() {
   const closedGovernanceProposals = Number(row.closed_governance_proposals ?? 0);
   const totalGovernanceVotes = Number(row.total_governance_votes ?? 0);
   const totalGovernanceVotingWeight = Number(row.total_governance_voting_weight ?? 0);
+  const uniqueGovernanceVoters = Number(row.unique_governance_voters ?? 0);
+  const averageGovernanceVotingWeight = Number(row.average_governance_voting_weight ?? 0);
 
   return {
     totalWallets: Number(row.total_wallets),
@@ -552,6 +568,8 @@ export async function getAnalytics() {
     closedGovernanceProposals,
     totalGovernanceVotes,
     totalGovernanceVotingWeight,
+    uniqueGovernanceVoters,
+    averageGovernanceVotingWeight,
   };
 }
 
@@ -784,6 +802,7 @@ export async function listStoredGovernanceVotes(proposalId: string) {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
+
 
 
 
