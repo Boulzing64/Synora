@@ -10,11 +10,36 @@
 
 export type GovernanceVoteChoice = "FOR" | "AGAINST";
 export type GovernanceProposalStatus = "ACTIVE" | "CLOSED";
-export type GovernanceProposal = StoredGovernanceProposal;
+export type GovernanceProposal = StoredGovernanceProposal & {
+  quorum: number;
+  quorumReached: boolean;
+  totalVotes: number;
+  remainingSeconds: number;
+};
 
 const PROPOSAL_DURATION_DAYS = 7;
+const GOVERNANCE_QUORUM = 100;
 
-async function getProposalStatus(proposal: GovernanceProposal): Promise<GovernanceProposalStatus> {
+function enrichGovernanceProposal(proposal: StoredGovernanceProposal): GovernanceProposal {
+  const remainingSeconds = Math.max(
+    0,
+    Math.floor((new Date(proposal.expiresAt).getTime() - Date.now()) / 1000)
+  );
+
+  const totalVotes = proposal.votesFor + proposal.votesAgainst;
+
+  return {
+    ...proposal,
+    totalVotes,
+    quorum: GOVERNANCE_QUORUM,
+    quorumReached: totalVotes >= GOVERNANCE_QUORUM,
+    remainingSeconds,
+  };
+}
+
+async function getProposalStatus(
+  proposal: StoredGovernanceProposal
+): Promise<GovernanceProposalStatus> {
   if (proposal.status === "CLOSED") {
     return "CLOSED";
   }
@@ -38,7 +63,9 @@ export async function listGovernanceProposals() {
     }))
   );
 
-  return resolvedProposals.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return resolvedProposals
+    .map(enrichGovernanceProposal)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function createGovernanceProposal(params: {
@@ -51,7 +78,7 @@ export async function createGovernanceProposal(params: {
   const expiresAt = new Date(createdAt);
   expiresAt.setDate(expiresAt.getDate() + PROPOSAL_DURATION_DAYS);
 
-  const proposal: GovernanceProposal = {
+  const proposal: StoredGovernanceProposal = {
     id,
     title: params.title,
     description: params.description,
@@ -63,7 +90,7 @@ export async function createGovernanceProposal(params: {
     expiresAt: expiresAt.toISOString(),
   };
 
-  return createStoredGovernanceProposal(proposal);
+  return enrichGovernanceProposal(await createStoredGovernanceProposal(proposal));
 }
 
 export async function voteGovernanceProposal(params: {
@@ -99,5 +126,5 @@ export async function voteGovernanceProposal(params: {
     proposal.votesAgainst += params.weight;
   }
 
-  return updateStoredGovernanceProposal(proposal);
+  return enrichGovernanceProposal(await updateStoredGovernanceProposal(proposal));
 }
