@@ -205,3 +205,19 @@ export function askAssistant(message: string) {
     message,
   });
 }
+
+export type AnalyticsSummary = {
+  totalWallets: number;
+  totalEvents: number;
+  totalRewardsClaimed: number;
+  topScore: number;
+  totalSynDistributed: number;
+};
+
+export type AnalyticsResponse = {
+  analytics: AnalyticsSummary;
+};
+
+export function getAnalytics() {
+  return getJson<AnalyticsResponse>("/analytics");
+}
