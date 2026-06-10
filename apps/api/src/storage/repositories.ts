@@ -543,23 +543,15 @@ export async function getAnalytics() {
     totalRewardsClaimed,
     topScore: Number(row.top_score),
     totalSynDistributed: totalRewardsClaimed * 10,
-      totalRewardClaims: totalRewardsClaimed,
-      uniqueRewardClaimers: Array.from(memoryReputationEventsStore.entries()).filter(([, events]) =>
-        events.some((event) => event.type === "REWARD_CLAIMED")
-      ).length,
-      averageRewardsPerUser:
-        uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
-      totalGovernanceProposals: memoryGovernanceProposals.size,
-      activeGovernanceProposals: Array.from(memoryGovernanceProposals.values()).filter(
-        (proposal) => proposal.status === "ACTIVE"
-      ).length,
-      closedGovernanceProposals: Array.from(memoryGovernanceProposals.values()).filter(
-        (proposal) => proposal.status !== "ACTIVE"
-      ).length,
-      totalGovernanceVotes: Array.from(memoryGovernanceVoteDetails.values()).flat().length,
-      totalGovernanceVotingWeight: Array.from(memoryGovernanceVoteDetails.values())
-        .flat()
-        .reduce((total, vote) => total + vote.weight, 0),
+    totalRewardClaims,
+    uniqueRewardClaimers,
+    averageRewardsPerUser:
+      uniqueRewardClaimers > 0 ? totalRewardClaims / uniqueRewardClaimers : 0,
+    totalGovernanceProposals,
+    activeGovernanceProposals,
+    closedGovernanceProposals,
+    totalGovernanceVotes,
+    totalGovernanceVotingWeight,
   };
 }
 
@@ -792,5 +784,6 @@ export async function listStoredGovernanceVotes(proposalId: string) {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
+
 
 
