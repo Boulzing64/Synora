@@ -802,7 +802,7 @@ export function createSynoraApp() {
 
   app.get("/governance/proposals", async (_request, response) => {
     return response.json({
-      proposals: listGovernanceProposals(),
+      proposals: await listGovernanceProposals(),
     });
   });
 
@@ -835,7 +835,7 @@ export function createSynoraApp() {
       });
     }
 
-    const proposal = createGovernanceProposal({
+    const proposal = await createGovernanceProposal({
       title: parsed.data.title,
       description: parsed.data.description,
       creatorWallet: authenticatedWallet,
@@ -875,7 +875,7 @@ export function createSynoraApp() {
     }
 
     try {
-      const proposal = voteGovernanceProposal({
+      const proposal = await voteGovernanceProposal({
         proposalId: request.params.proposalId,
         walletAddress: authenticatedWallet,
         choice: parsed.data.choice,
@@ -905,4 +905,5 @@ export function createSynoraApp() {
 
   return app;
 }
+
 

@@ -1,48 +1,47 @@
-﻿export type GovernanceVoteChoice = "FOR" | "AGAINST";
+﻿import {
+  createStoredGovernanceProposal,
+  createStoredGovernanceVote,
+  getStoredGovernanceProposal,
+  hasStoredGovernanceVote,
+  listStoredGovernanceProposals,
+  updateStoredGovernanceProposal,
+  type StoredGovernanceProposal,
+} from "../storage/repositories.js";
 
+export type GovernanceVoteChoice = "FOR" | "AGAINST";
 export type GovernanceProposalStatus = "ACTIVE" | "CLOSED";
-
-export type GovernanceProposal = {
-  id: string;
-  title: string;
-  description: string;
-  creatorWallet: string;
-  status: GovernanceProposalStatus;
-  votesFor: number;
-  votesAgainst: number;
-  createdAt: string;
-  expiresAt: string;
-};
+export type GovernanceProposal = StoredGovernanceProposal;
 
 const PROPOSAL_DURATION_DAYS = 7;
 
-const proposals = new Map<string, GovernanceProposal>();
-const votes = new Map<string, Set<string>>();
-
-function getProposalStatus(proposal: GovernanceProposal): GovernanceProposalStatus {
+async function getProposalStatus(proposal: GovernanceProposal): Promise<GovernanceProposalStatus> {
   if (proposal.status === "CLOSED") {
     return "CLOSED";
   }
 
   if (Date.now() >= new Date(proposal.expiresAt).getTime()) {
     proposal.status = "CLOSED";
-    proposals.set(proposal.id, proposal);
+    await updateStoredGovernanceProposal(proposal);
     return "CLOSED";
   }
 
   return "ACTIVE";
 }
 
-export function listGovernanceProposals() {
-  return Array.from(proposals.values())
-    .map((proposal) => ({
+export async function listGovernanceProposals() {
+  const proposals = await listStoredGovernanceProposals();
+
+  const resolvedProposals = await Promise.all(
+    proposals.map(async (proposal) => ({
       ...proposal,
-      status: getProposalStatus(proposal),
+      status: await getProposalStatus(proposal),
     }))
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  );
+
+  return resolvedProposals.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function createGovernanceProposal(params: {
+export async function createGovernanceProposal(params: {
   title: string;
   description: string;
   creatorWallet: string;
@@ -64,36 +63,35 @@ export function createGovernanceProposal(params: {
     expiresAt: expiresAt.toISOString(),
   };
 
-  proposals.set(id, proposal);
-  votes.set(id, new Set());
-
-  return proposal;
+  return createStoredGovernanceProposal(proposal);
 }
 
-export function voteGovernanceProposal(params: {
+export async function voteGovernanceProposal(params: {
   proposalId: string;
   walletAddress: string;
   choice: GovernanceVoteChoice;
   weight: number;
 }) {
-  const proposal = proposals.get(params.proposalId);
+  const proposal = await getStoredGovernanceProposal(params.proposalId);
 
   if (!proposal) {
     return null;
   }
 
-  if (getProposalStatus(proposal) !== "ACTIVE") {
+  if ((await getProposalStatus(proposal)) !== "ACTIVE") {
     throw new Error("GOVERNANCE_PROPOSAL_CLOSED");
   }
 
-  const proposalVotes = votes.get(params.proposalId) ?? new Set<string>();
-
-  if (proposalVotes.has(params.walletAddress)) {
+  if (await hasStoredGovernanceVote(params.proposalId, params.walletAddress)) {
     throw new Error("WALLET_ALREADY_VOTED");
   }
 
-  proposalVotes.add(params.walletAddress);
-  votes.set(params.proposalId, proposalVotes);
+  await createStoredGovernanceVote({
+    proposalId: params.proposalId,
+    walletAddress: params.walletAddress,
+    choice: params.choice,
+    weight: params.weight,
+  });
 
   if (params.choice === "FOR") {
     proposal.votesFor += params.weight;
@@ -101,7 +99,5 @@ export function voteGovernanceProposal(params: {
     proposal.votesAgainst += params.weight;
   }
 
-  proposals.set(params.proposalId, proposal);
-
-  return proposal;
+  return updateStoredGovernanceProposal(proposal);
 }

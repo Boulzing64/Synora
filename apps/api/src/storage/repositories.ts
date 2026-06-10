@@ -510,3 +510,191 @@ export async function getAnalytics() {
     totalSynDistributed: totalRewardsClaimed * 10,
   };
 }
+
+export type StoredGovernanceVoteChoice = "FOR" | "AGAINST";
+export type StoredGovernanceProposalStatus = "ACTIVE" | "CLOSED";
+
+export type StoredGovernanceProposal = {
+  id: string;
+  title: string;
+  description: string;
+  creatorWallet: string;
+  status: StoredGovernanceProposalStatus;
+  votesFor: number;
+  votesAgainst: number;
+  createdAt: string;
+  expiresAt: string;
+};
+
+const memoryGovernanceProposals = new Map<string, StoredGovernanceProposal>();
+const memoryGovernanceVotes = new Map<string, Set<string>>();
+
+function mapGovernanceProposalRow(row: any): StoredGovernanceProposal {
+  return {
+    id: String(row.id),
+    title: String(row.title),
+    description: String(row.description),
+    creatorWallet: String(row.creator_wallet),
+    status: row.status as StoredGovernanceProposalStatus,
+    votesFor: Number(row.votes_for),
+    votesAgainst: Number(row.votes_against),
+    createdAt: new Date(row.created_at).toISOString(),
+    expiresAt: new Date(row.expires_at).toISOString(),
+  };
+}
+
+export async function listStoredGovernanceProposals() {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return Array.from(memoryGovernanceProposals.values()).sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt)
+    );
+  }
+
+  const result = await databasePool.query(`
+    SELECT id, title, description, creator_wallet, status, votes_for, votes_against, created_at, expires_at
+    FROM governance_proposals
+    ORDER BY created_at DESC
+  `);
+
+  return result.rows.map(mapGovernanceProposalRow);
+}
+
+export async function createStoredGovernanceProposal(proposal: StoredGovernanceProposal) {
+  await ensureUser(proposal.creatorWallet);
+
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    memoryGovernanceProposals.set(proposal.id, proposal);
+    memoryGovernanceVotes.set(proposal.id, new Set());
+    return proposal;
+  }
+
+  await databasePool.query(
+    `
+      INSERT INTO governance_proposals(
+        id,
+        title,
+        description,
+        creator_wallet,
+        status,
+        votes_for,
+        votes_against,
+        created_at,
+        expires_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `,
+    [
+      proposal.id,
+      proposal.title,
+      proposal.description,
+      proposal.creatorWallet,
+      proposal.status,
+      proposal.votesFor,
+      proposal.votesAgainst,
+      proposal.createdAt,
+      proposal.expiresAt,
+    ]
+  );
+
+  return proposal;
+}
+
+export async function getStoredGovernanceProposal(proposalId: string) {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return memoryGovernanceProposals.get(proposalId) ?? null;
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT id, title, description, creator_wallet, status, votes_for, votes_against, created_at, expires_at
+      FROM governance_proposals
+      WHERE id = $1
+      LIMIT 1
+    `,
+    [proposalId]
+  );
+
+  const row = result.rows[0];
+
+  if (!row) {
+    return null;
+  }
+
+  return mapGovernanceProposalRow(row);
+}
+
+export async function updateStoredGovernanceProposal(proposal: StoredGovernanceProposal) {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    memoryGovernanceProposals.set(proposal.id, proposal);
+    return proposal;
+  }
+
+  await databasePool.query(
+    `
+      UPDATE governance_proposals
+      SET
+        status = $2,
+        votes_for = $3,
+        votes_against = $4
+      WHERE id = $1
+    `,
+    [proposal.id, proposal.status, proposal.votesFor, proposal.votesAgainst]
+  );
+
+  return proposal;
+}
+
+export async function hasStoredGovernanceVote(proposalId: string, walletAddress: string) {
+  const normalizedWallet = getAddress(walletAddress);
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return memoryGovernanceVotes.get(proposalId)?.has(normalizedWallet) ?? false;
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT proposal_id
+      FROM governance_votes
+      WHERE proposal_id = $1 AND wallet_address = $2
+      LIMIT 1
+    `,
+    [proposalId, normalizedWallet]
+  );
+
+  return result.rows.length > 0;
+}
+
+export async function createStoredGovernanceVote(params: {
+  proposalId: string;
+  walletAddress: string;
+  choice: StoredGovernanceVoteChoice;
+  weight: number;
+}) {
+  const normalizedWallet = await ensureUser(params.walletAddress);
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    const proposalVotes = memoryGovernanceVotes.get(params.proposalId) ?? new Set<string>();
+    proposalVotes.add(normalizedWallet);
+    memoryGovernanceVotes.set(params.proposalId, proposalVotes);
+    return;
+  }
+
+  await databasePool.query(
+    `
+      INSERT INTO governance_votes(proposal_id, wallet_address, choice, weight)
+      VALUES ($1, $2, $3, $4)
+    `,
+    [params.proposalId, normalizedWallet, params.choice, params.weight]
+  );
+}
+
