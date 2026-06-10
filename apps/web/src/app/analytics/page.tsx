@@ -29,6 +29,8 @@ const text = {
     closedProposals: "Propositions cloturees",
     governanceVotes: "Votes DAO",
     governanceWeight: "Poids total DAO",
+    uniqueGovernanceVoters: "Votants DAO uniques",
+    averageGovernanceWeight: "Poids moyen des votes",
     
   },
   en: {
@@ -52,6 +54,8 @@ const text = {
     closedProposals: "Closed proposals",
     governanceVotes: "DAO votes",
     governanceWeight: "Total DAO weight",
+    uniqueGovernanceVoters: "Unique DAO voters",
+    averageGovernanceWeight: "Average vote weight",
     
   },
 } as const;
@@ -211,6 +215,19 @@ export default function AnalyticsPage() {
            <p className="text-sm text-slate-400">{t.governanceWeight}</p>
            <p className="mt-2 text-4xl font-bold">
              {analytics.totalGovernanceVotingWeight}
+             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.uniqueGovernanceVoters}</p>
+            <p className="mt-2 text-4xl font-bold">
+             {analytics.uniqueGovernanceVoters}
+        </p>
+    </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+             <p className="text-sm text-slate-400">{t.averageGovernanceWeight}</p>
+             <p className="mt-2 text-4xl font-bold">
+               {analytics.averageGovernanceVotingWeight.toFixed(2)}
+            </p>
+         </div>
          </p>
       </div>
 

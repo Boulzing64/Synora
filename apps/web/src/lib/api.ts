@@ -225,6 +225,8 @@ export type AnalyticsSummary = {
   closedGovernanceProposals: number;
   totalGovernanceVotes: number;
   totalGovernanceVotingWeight: number;
+  uniqueGovernanceVoters: number;
+  averageGovernanceVotingWeight: number;
 };
 
 export type AnalyticsResponse = {
@@ -317,3 +319,4 @@ export type RewardsHistoryResponse = {
 export function getRewardClaims(walletAddress: string) {
   return getJson<RewardsHistoryResponse>(`/rewards/${walletAddress}`);
 }
+
