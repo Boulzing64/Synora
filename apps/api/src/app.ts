@@ -28,6 +28,11 @@ import {
   saveAuthNonce,
   getAnalytics,
 } from "./storage/repositories.js";
+import {
+  createGovernanceProposal,
+  listGovernanceProposals,
+  voteGovernanceProposal,
+} from "./governance/repository.js";
 
 export function createSynoraApp() {
   config({ path: ".env.local" });
@@ -729,5 +734,84 @@ export function createSynoraApp() {
       status,
     });
   });
+
+    app.get("/governance/proposals", async (_request, response) => {
+    return response.json({
+      proposals: listGovernanceProposals(),
+    });
+  });
+
+  app.post("/governance/proposals", async (request, response) => {
+    const schema = z.object({
+      title: z.string().min(3).max(120),
+      description: z.string().min(10).max(2000),
+      creatorWallet: z.string(),
+    });
+
+    const parsed = schema.safeParse(request.body);
+
+    if (!parsed.success || !isAddress(parsed.data.creatorWallet)) {
+      return response.status(400).json({
+        error: "INVALID_GOVERNANCE_PROPOSAL",
+      });
+    }
+
+    const proposal = createGovernanceProposal({
+      title: parsed.data.title,
+      description: parsed.data.description,
+      creatorWallet: getAddress(parsed.data.creatorWallet),
+    });
+
+    return response.status(201).json({
+      proposal,
+    });
+  });
+
+  app.post("/governance/proposals/:proposalId/vote", async (request, response) => {
+    const schema = z.object({
+      walletAddress: z.string(),
+      choice: z.enum(["FOR", "AGAINST"]),
+      weight: z.number().min(0),
+    });
+
+    const parsed = schema.safeParse(request.body);
+
+    if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+      return response.status(400).json({
+        error: "INVALID_GOVERNANCE_VOTE",
+      });
+    }
+
+    try {
+      const proposal = voteGovernanceProposal({
+        proposalId: request.params.proposalId,
+        walletAddress: getAddress(parsed.data.walletAddress),
+        choice: parsed.data.choice,
+        weight: parsed.data.weight,
+      });
+
+      if (!proposal) {
+        return response.status(404).json({
+          error: "GOVERNANCE_PROPOSAL_NOT_FOUND",
+        });
+      }
+
+      return response.json({
+        proposal,
+      });
+    } catch (caughtError) {
+      if (
+        caughtError instanceof Error &&
+        caughtError.message === "WALLET_ALREADY_VOTED"
+      ) {
+        return response.status(409).json({
+          error: "WALLET_ALREADY_VOTED",
+        });
+      }
+
+      throw caughtError;
+    }
+  });
+  
   return app;
 }
