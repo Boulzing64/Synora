@@ -729,5 +729,4 @@ export function createSynoraApp() {
       status,
     });
   });
-  return app;
-}
+  }
