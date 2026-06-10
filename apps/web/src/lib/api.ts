@@ -221,3 +221,15 @@ export type AnalyticsResponse = {
 export function getAnalytics() {
   return getJson<AnalyticsResponse>("/analytics");
 }
+
+export type StakingResponse = {
+  walletAddress: string;
+  stakedBalance: string;
+  stakingScoreBoost: number;
+  governanceWeight: number;
+  status: string;
+};
+
+export function getStakingProfile(walletAddress: string) {
+  return getJson<StakingResponse>(`/staking/${walletAddress}`);
+}

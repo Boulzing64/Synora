@@ -22,6 +22,7 @@ const navigation = [
   { href: "/reputation", labelFr: "Reputation", labelEn: "Reputation" },
   { href: "/status", labelFr: "Statut", labelEn: "Status" },
   { href: "/analytics", labelFr: "Analytics", labelEn: "Analytics" },
+  { href: "/staking", labelFr: "Staking", labelEn: "Staking" },
 ];
 
 export function SynoraShell({ title, subtitle, children }: SynoraShellProps) {
