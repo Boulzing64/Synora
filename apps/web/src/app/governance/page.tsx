@@ -39,6 +39,9 @@ const text = {
     empty: "Aucune proposition pour le moment.",
     loading: "Chargement...",
     error: "Erreur gouvernance.",
+    passed: "Adoptée",
+    rejected: "Rejetée",
+    expired: "Expirée",
   },
   en: {
     title: "Governance",
@@ -64,6 +67,9 @@ const text = {
     empty: "No proposal yet.",
     loading: "Loading...",
     error: "Governance error.",
+    passed: "Passed",
+    rejected: "Rejected",
+    expired: "Expired",
   },
 } as const;
 
@@ -239,10 +245,20 @@ export default function GovernancePage() {
                       className={`rounded-full px-3 py-1 text-sm font-bold ${
                         proposal.status === "ACTIVE"
                           ? "bg-emerald-950 text-emerald-200"
-                          : "bg-slate-800 text-slate-300"
+                          : proposal.status === "PASSED"
+                            ? "bg-cyan-950 text-cyan-200"
+                            : proposal.status === "REJECTED"
+                              ? "bg-red-950 text-red-200"
+                              : "bg-slate-800 text-slate-300"
                       }`}
                     >
-                      {proposal.status === "ACTIVE" ? t.active : t.closed}
+                      {proposal.status === "ACTIVE"
+                        ? t.active
+                        : proposal.status === "PASSED"
+                          ? t.passed
+                          : proposal.status === "REJECTED"
+                            ? t.rejected
+                            : t.expired}
                     </span>
                   </div>
 

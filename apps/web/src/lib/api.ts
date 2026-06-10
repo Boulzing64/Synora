@@ -252,7 +252,7 @@ export type GovernanceProposal = {
   title: string;
   description: string;
   creatorWallet: string;
-  status: "ACTIVE" | "CLOSED";
+  status: "ACTIVE" | "PASSED" | "REJECTED" | "EXPIRED";
   votesFor: number;
   votesAgainst: number;
   createdAt: string;
@@ -317,6 +317,3 @@ export type RewardsHistoryResponse = {
 export function getRewardClaims(walletAddress: string) {
   return getJson<RewardsHistoryResponse>(`/rewards/${walletAddress}`);
 }
-
-
-
