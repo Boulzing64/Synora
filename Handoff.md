@@ -2,123 +2,270 @@
 
 ## Etat actuel
 
-SYNORA dispose d'un MVP Web3 avance et fonctionnel.
+SYNORA est un MVP Web3 fonctionnel déployé sur Base Sepolia avec authentification wallet, réputation persistante, rewards off-chain et on-chain, dashboard utilisateur, internationalisation FR/EN et leaderboard.
 
-## Production
+---
 
-- Frontend Vercel: https://synora-web.vercel.app
-- Page status: https://synora-web.vercel.app/status
-- API Render: https://synora-api.onrender.com
-- Healthcheck: https://synora-api.onrender.com/health
-- GitHub: https://github.com/Boulzing64/Synora
+## Infrastructure
 
-## Blockchain
+### Frontend
 
-- Network: Base Sepolia
-- Chain ID: 84532
-- SYNORA Token: 0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916
-- RewardsDistributor: 0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443
-- RewardsDistributor finance: 1000 SYN
-- Verification explorer: effectuee
+- Next.js
+- Vercel
+- Sidebar de navigation
+- Dashboard utilisateur
+- Internationalisation FR / EN
+- Help Widget moderne
+- Responsive desktop/mobile
 
-## Frontend
+### Backend
 
-- Next.js deploye sur Vercel
-- Dashboard wallet fonctionnel
-- Connexion MetaMask
-- Lecture balance SYN
-- Session JWT persistante
-- Reputation affichee
-- Historique reputation affiche
-- Claim reward MVP off-chain
-- Preparation FR / EN
-- Probleme d'encodage corrige avec textes ASCII propres
-
-## Backend
-
-- API Express deployee sur Render
-- PostgreSQL Render configure
-- Auth wallet par signature
+- Express
+- PostgreSQL Render
 - JWT
-- Nonces persistants
-- Reputation persistante
-- Reward claims persistants
+- Authentification wallet par signature
 - Rate limiting
 - Helmet
-- CORS strict
-- Logs structures
-- Tests API HTTP
-- Endpoint /rewards/claim actif
-- Endpoint /rewards/authorize prepare
+- CORS
+- Logs structurés
+- Tests automatisés
 
-## Rewards
+### Blockchain
 
-- Claim MVP off-chain fonctionnel
-- RewardsDistributor deploye sur Base Sepolia
-- RewardsDistributor finance avec 1000 SYN
-- Signature EIP-712 preparee
-- claimWithSignature disponible dans le contrat
-- Variables Render rewards configurees:
-  - REWARDS_DISTRIBUTOR_ADDRESS
-  - REWARDS_CHAIN_ID
-  - REWARDS_SIGNER_PRIVATE_KEY
+- Réseau : Base Sepolia
+- Chain ID : 84532
 
-## Etat Git recent
+### Contrats
 
-Dernieres corrections importantes:
+SYN Token
 
-- i18n frontend prepare
-- Dashboard corrige
-- Encodage frontend nettoye
-- Rewards on-chain prepare
-- RewardsDistributor finance
+- 0xC7F6E084D3F8e8E1D4B7A56B46548eb351B81916
 
-## Limites actuelles
+RewardsDistributor
 
-- Claim on-chain pas encore branche dans le dashboard
-- Le frontend utilise encore principalement le claim off-chain
-- Le systeme FR / EN est prepare mais pas encore complet sur toutes les pages
-- Pas encore de leaderboard
-- Pas encore de badges utilisateur
-- Pas encore de staking
-- Pas encore de gouvernance DAO
-- Pas encore de monitoring externe
+- 0xADbAA2ABF6b40a3705FAA54A41bF3010768A8443
 
-## Rewards On-chain validé
+Etat :
 
-- RewardsDistributor déployé sur Base Sepolia
-- RewardsDistributor financé avec 1000 SYN
-- Endpoint API actif: POST /rewards/authorize
-- Signature EIP-712 backend fonctionnelle
-- Frontend connecté à claimWithSignature
-- Transaction MetaMask validée
-- Transfert SYN on-chain confirmé
-- Flux rewards on-chain SYNORA validé de bout en bout
+- Déployé
+- Vérifié
+- Financé avec 1000 SYN
 
-## Boucle Web3 complète validée
+---
 
-Utilisateur:
+## Fonctionnalités terminées
 
-1. Connecte MetaMask
-2. Signe le message d'authentification
-3. Reçoit un JWT
-4. Charge sa réputation
-5. Demande une autorisation rewards
-6. Signe la transaction MetaMask
-7. Appelle RewardsDistributor.claimWithSignature
-8. Reçoit des SYN on-chain
+### Authentification
 
-## Etat milestone
+- Connexion MetaMask
+- Signature wallet
+- JWT persistant
+- Restauration de session
 
-SYNORA MVP Beta dispose maintenant de:
+### Réputation
 
-- Token ERC-20
-- Auth wallet
+- Profil utilisateur
+- Historique réputation
+- Score réputation
+- Niveaux réputation
+- Evénements persistants PostgreSQL
+
+### Rewards
+
+Off-chain :
+
+- Claim MVP
+- Historique rewards
+
+On-chain :
+
+- Endpoint /rewards/authorize
+- Signatures EIP-712
+- RewardsDistributor.claimWithSignature
+- Claim on-chain depuis dashboard
+- Réception SYN validée
+
+### Dashboard
+
+- Balance SYN
+- Wallet connecté
+- Statut session
 - Réputation
-- PostgreSQL
+- Historique
+- Rewards
+
+### Internationalisation
+
+Pages traduites :
+
+- Home
+- Dashboard
+- Rewards
+- Reputation
+- Status
+- Help Widget
+
+### Leaderboard
+
+Backend :
+
+- GET /leaderboard
+
+Frontend :
+
+- Page /leaderboard
+- Classement score
+- Classement rewards
+- Classement activité
+
+### Badges
+
+Backend :
+
+- Moteur badges
+- Endpoint /badges/:walletAddress
+
+Badges disponibles :
+
+- Wallet Verified
+- Early Adopter
+- SYN Connected
+- Reward Claimer
+- On-chain Pioneer
+- Top Reputation
+
+Frontend :
+
+- En cours d'intégration
+
+---
+
+## Tests validés
+
+### API
+
+- Auth wallet
+- JWT
+- Réputation
+- Rewards
+- Leaderboard
+- Badges
+
+### Frontend
+
+- Build Next.js
+- Navigation sidebar
+- Dashboard
+- Internationalisation
+
+### Blockchain
+
+- SYN Token
+- RewardsDistributor
+- Claim on-chain validé
+- Financement RewardsDistributor validé
+
+---
+
+## Fonctionnalités en cours
+
+### Badges Frontend
+
+Etat :
+
+- API terminée
+- UI à terminer
+
+Objectif :
+
+- Affichage badges utilisateur
+- Etat verrouillé / débloqué
+- Intégration dashboard
+
+---
+
+## Fonctionnalités prioritaires restantes
+
+### Priorité 1
+
+Badges utilisateur complets
+
+- Page badges
+- Intégration dashboard
+- Progression utilisateur
+
+### Priorité 2
+
+Assistant IA SYNORA
+
+- Remplacer Help Widget statique
+- API OpenAI
+- Réponses contextualisées
+- Support utilisateur
+
+### Priorité 3
+
+Staking SYN
+
+- Lock tokens
+- Récompenses staking
+- Préparation gouvernance
+
+### Priorité 4
+
+DAO SYNORA
+
+- Propositions
+- Vote
+- Délégation
+- Gouvernance on-chain
+
+### Priorité 5
+
+Analytics
+
+- Statistiques plateforme
+- Nombre wallets
+- Rewards distribués
+- Evolution réputation
+
+---
+
+## Vision post-MVP
+
+Phase Beta
+
+- Badges
+- Assistant IA
+- Analytics
+
+Phase V1
+
+- Staking
+- Gouvernance
+- DAO
+
+Phase V2
+
+- IA comportementale
+- Réputation avancée
+- Recommandations intelligentes
+
+---
+
+## Etat global
+
+SYNORA dispose aujourd'hui :
+
+- Auth wallet
+- Réputation persistante
 - Dashboard
 - Rewards off-chain
 - Rewards on-chain
-- EIP-712
-- Smart contract distributor
-- Déploiement cloud complet
+- Leaderboard
+- Internationalisation
+- Infrastructure cloud
+- Contrats déployés
+
+Le MVP Beta est opérationnel.
+
