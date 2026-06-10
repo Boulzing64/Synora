@@ -450,6 +450,10 @@ export async function getAnalytics() {
       (event) => event.type === "REWARD_CLAIMED"
     ).length;
 
+    const uniqueRewardClaimers = Array.from(memoryReputationEventsStore.entries()).filter(
+      ([, events]) => events.some((event) => event.type === "REWARD_CLAIMED")
+    ).length;
+
     const topScore = Array.from(memoryReputationEventsStore.values()).reduce(
       (highestScore, events) => {
         const score = events.reduce((total, event) => {
@@ -472,6 +476,12 @@ export async function getAnalytics() {
       totalRewardsClaimed,
       topScore,
       totalSynDistributed: totalRewardsClaimed * 10,
+      totalRewardClaims: totalRewardsClaimed,
+      uniqueRewardClaimers: Array.from(memoryReputationEventsStore.entries()).filter(([, events]) =>
+        events.some((event) => event.type === "REWARD_CLAIMED")
+      ).length,
+      averageRewardsPerUser:
+      uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
     };
   }
 
@@ -496,11 +506,15 @@ export async function getAnalytics() {
       (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reputation_events) AS total_wallets,
       (SELECT COUNT(*)::INTEGER FROM reputation_events) AS total_events,
       (SELECT COUNT(*)::INTEGER FROM reputation_events WHERE type = 'REWARD_CLAIMED') AS total_rewards_claimed,
-      COALESCE((SELECT MAX(score)::INTEGER FROM wallet_scores), 0) AS top_score
+      COALESCE((SELECT MAX(score)::INTEGER FROM wallet_scores), 0) AS top_score,
+      (SELECT COUNT(*)::INTEGER FROM reward_claims) AS total_reward_claims,
+      (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reward_claims) AS unique_reward_claimers
   `);
 
   const row = result.rows[0];
   const totalRewardsClaimed = Number(row.total_rewards_claimed);
+  const totalRewardClaims = Number(row.total_reward_claims ?? totalRewardsClaimed);
+  const uniqueRewardClaimers = Number(row.unique_reward_claimers ?? 0);
 
   return {
     totalWallets: Number(row.total_wallets),
@@ -508,6 +522,12 @@ export async function getAnalytics() {
     totalRewardsClaimed,
     topScore: Number(row.top_score),
     totalSynDistributed: totalRewardsClaimed * 10,
+      totalRewardClaims: totalRewardsClaimed,
+      uniqueRewardClaimers: Array.from(memoryReputationEventsStore.entries()).filter(([, events]) =>
+        events.some((event) => event.type === "REWARD_CLAIMED")
+      ).length,
+      averageRewardsPerUser:
+      uniqueRewardClaimers > 0 ? totalRewardsClaimed / uniqueRewardClaimers : 0,
   };
 }
 
@@ -740,4 +760,7 @@ export async function listStoredGovernanceVotes(proposalId: string) {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
+
+
+
 
