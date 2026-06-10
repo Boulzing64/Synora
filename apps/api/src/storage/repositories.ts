@@ -1,4 +1,4 @@
-import pg from "pg";
+﻿import pg from "pg";
 import type { Pool as PgPool } from "pg";
 import { getAddress } from "viem";
 
@@ -69,6 +69,43 @@ const MIGRATIONS: Migration[] = [
 
       CREATE INDEX IF NOT EXISTS idx_auth_nonces_expires_at
         ON auth_nonces(expires_at);
+    `,
+  },
+  {
+    version: "005",
+    name: "create_governance_proposals",
+    sql: `
+      CREATE TABLE IF NOT EXISTS governance_proposals (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        creator_wallet TEXT NOT NULL REFERENCES users(wallet_address) ON DELETE CASCADE,
+        status TEXT NOT NULL,
+        votes_for NUMERIC NOT NULL DEFAULT 0,
+        votes_against NUMERIC NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL
+      );
+    `,
+  },
+  {
+    version: "006",
+    name: "create_governance_votes",
+    sql: `
+      CREATE TABLE IF NOT EXISTS governance_votes (
+        proposal_id TEXT NOT NULL REFERENCES governance_proposals(id) ON DELETE CASCADE,
+        wallet_address TEXT NOT NULL REFERENCES users(wallet_address) ON DELETE CASCADE,
+        choice TEXT NOT NULL,
+        weight NUMERIC NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (proposal_id, wallet_address)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_governance_votes_proposal
+        ON governance_votes(proposal_id);
+
+      CREATE INDEX IF NOT EXISTS idx_governance_proposals_status_created
+        ON governance_proposals(status, created_at);
     `,
   },
 ];
