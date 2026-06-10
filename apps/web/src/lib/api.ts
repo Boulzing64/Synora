@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export type SynoraUser = {
   walletAddress: string;
@@ -229,8 +229,7 @@ export type StakingResponse = {
   walletAddress: string;
   stakedBalance: string;
   stakingScoreBoost: number;
-  governanceWeight: number;
-  status: string;
+  governanceWeight: number; status: string;
 };
 
 export function getStakingProfile(walletAddress: string) {
@@ -268,14 +267,13 @@ export function voteGovernanceProposal(params: {
   proposalId: string;
   walletAddress: string;
   choice: "FOR" | "AGAINST";
-  weight: number;
 }) {
   return postJson<{ proposal: GovernanceProposal }>(
     `/governance/proposals/${params.proposalId}/vote`,
     {
       walletAddress: params.walletAddress,
       choice: params.choice,
-      weight: params.weight,
-    }
+}
   );
 }
+

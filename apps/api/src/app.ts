@@ -1,4 +1,4 @@
-import { askSynoraAssistant } from "./assistant/service.js";
+﻿import { askSynoraAssistant } from "./assistant/service.js";
 import { buildBadges } from "./badges/engine.js";
 import { config } from "dotenv";
 import crypto from "node:crypto";
@@ -208,7 +208,7 @@ export function createSynoraApp() {
 
     const parsed = schema.safeParse(request.body);
 
-    if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+    if (!parsed.success) {
       logger.warn("auth.verify.invalid_payload");
       return response.status(400).json({
         error: "INVALID_AUTH_PAYLOAD",
@@ -742,15 +742,23 @@ export function createSynoraApp() {
   });
 
   app.post("/governance/proposals", async (request, response) => {
+    const authenticatedWallet =
+      getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "UNAUTHORIZED",
+      });
+    }
     const schema = z.object({
       title: z.string().min(3).max(120),
       description: z.string().min(10).max(2000),
-      creatorWallet: z.string(),
+      
     });
 
     const parsed = schema.safeParse(request.body);
 
-    if (!parsed.success || !isAddress(parsed.data.creatorWallet)) {
+    if (!parsed.success) {
       return response.status(400).json({
         error: "INVALID_GOVERNANCE_PROPOSAL",
       });
@@ -759,7 +767,7 @@ export function createSynoraApp() {
     const proposal = createGovernanceProposal({
       title: parsed.data.title,
       description: parsed.data.description,
-      creatorWallet: getAddress(parsed.data.creatorWallet),
+      creatorWallet: authenticatedWallet,
     });
 
     return response.status(201).json({
@@ -768,15 +776,21 @@ export function createSynoraApp() {
   });
 
   app.post("/governance/proposals/:proposalId/vote", async (request, response) => {
+    const authenticatedWallet =
+      getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "UNAUTHORIZED",
+      });
+    }
     const schema = z.object({
-      walletAddress: z.string(),
       choice: z.enum(["FOR", "AGAINST"]),
-      weight: z.number().min(0),
     });
 
     const parsed = schema.safeParse(request.body);
 
-    if (!parsed.success || !isAddress(parsed.data.walletAddress)) {
+    if (!parsed.success) {
       return response.status(400).json({
         error: "INVALID_GOVERNANCE_VOTE",
       });
@@ -785,9 +799,9 @@ export function createSynoraApp() {
     try {
       const proposal = voteGovernanceProposal({
         proposalId: request.params.proposalId,
-        walletAddress: getAddress(parsed.data.walletAddress),
+        walletAddress: authenticatedWallet,
         choice: parsed.data.choice,
-        weight: parsed.data.weight,
+        weight: 1,
       });
 
       if (!proposal) {
@@ -815,3 +829,5 @@ export function createSynoraApp() {
   
   return app;
 }
+
+

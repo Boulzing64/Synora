@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -124,8 +124,7 @@ export default function GovernancePage() {
         proposalId,
         walletAddress: voterWallet,
         choice,
-        weight: Number(weight),
-      });
+});
 
       await loadProposals();
     } catch {
