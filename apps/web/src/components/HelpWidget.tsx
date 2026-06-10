@@ -2,39 +2,47 @@
 
 import { useEffect, useState } from "react";
 
+import { askAssistant } from "@/lib/api";
+
 type Locale = "fr" | "en";
 
 const text = {
   fr: {
     badge: "Aide IA",
-    title: "Centre d'aide",
+    title: "Centre d'aide SYNORA",
     subtitle:
-      "Assistant guide pour comprendre le dashboard, les rewards et la reputation.",
+      "Pose une question sur le wallet, les rewards, la reputation ou Base Sepolia.",
     buttonSmall: "AI Help",
     buttonMain: "Besoin d'aide ?",
-    localHelp:
-      "Cette aide est locale pour le moment. La prochaine evolution branchera un vrai assistant IA via l'API.",
+    placeholder: "Ecris ta question...",
+    send: "Envoyer",
+    loading: "Reponse en cours...",
+    fallback:
+      "Je peux t'aider a comprendre SYNORA, ton wallet, les rewards et la reputation.",
     close: "X",
     questions: [
       "Comment connecter mon wallet ?",
-      "Comment reclamer une recompense ?",
+      "Comment reclamer une recompense on-chain ?",
       "Pourquoi ma balance SYN ne s'affiche pas ?",
       "Comment fonctionne la reputation ?",
     ],
   },
   en: {
     badge: "AI Help",
-    title: "Help center",
+    title: "SYNORA Help Center",
     subtitle:
-      "Guided assistant to understand the dashboard, rewards and reputation.",
+      "Ask a question about wallet, rewards, reputation or Base Sepolia.",
     buttonSmall: "AI Help",
     buttonMain: "Need help?",
-    localHelp:
-      "This help is local for now. The next evolution will connect a real AI assistant through the API.",
+    placeholder: "Type your question...",
+    send: "Send",
+    loading: "Answering...",
+    fallback:
+      "I can help you understand SYNORA, your wallet, rewards and reputation.",
     close: "X",
     questions: [
       "How do I connect my wallet?",
-      "How do I claim a reward?",
+      "How do I claim an on-chain reward?",
       "Why is my SYN balance not displayed?",
       "How does reputation work?",
     ],
@@ -44,7 +52,10 @@ const text = {
 export function HelpWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState("");
+  const [customQuestion, setCustomQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
   const [locale, setLocale] = useState<Locale>("fr");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const savedLocale = window.localStorage.getItem("synora.locale");
@@ -59,6 +70,8 @@ export function HelpWidget() {
       if (customEvent.detail === "fr" || customEvent.detail === "en") {
         setLocale(customEvent.detail);
         setSelectedQuestion("");
+        setCustomQuestion("");
+        setAnswer("");
       }
     }
 
@@ -71,10 +84,33 @@ export function HelpWidget() {
 
   const t = text[locale];
 
+  async function sendQuestion(question: string) {
+    if (!question.trim()) {
+      return;
+    }
+
+    setSelectedQuestion(question);
+    setIsLoading(true);
+    setAnswer("");
+
+    try {
+      const response = await askAssistant(question);
+      setAnswer(response.answer || t.fallback);
+    } catch {
+      setAnswer(t.fallback);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function submitCustomQuestion() {
+    await sendQuestion(customQuestion);
+  }
+
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {isOpen ? (
-        <div className="mb-4 w-[340px] rounded-3xl border border-cyan-400/30 bg-slate-950/95 p-5 text-white shadow-2xl shadow-cyan-950/40 backdrop-blur">
+        <div className="mb-4 w-[360px] rounded-3xl border border-cyan-400/30 bg-slate-950/95 p-5 text-white shadow-2xl shadow-cyan-950/40 backdrop-blur">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
@@ -98,7 +134,7 @@ export function HelpWidget() {
               <button
                 key={question}
                 type="button"
-                onClick={() => setSelectedQuestion(question)}
+                onClick={() => sendQuestion(question)}
                 className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-left text-sm transition hover:border-cyan-400 hover:text-cyan-300"
               >
                 {question}
@@ -106,10 +142,30 @@ export function HelpWidget() {
             ))}
           </div>
 
-          {selectedQuestion ? (
+          <div className="mt-5 flex gap-2">
+            <input
+              value={customQuestion}
+              onChange={(event) => setCustomQuestion(event.target.value)}
+              placeholder={t.placeholder}
+              className="min-w-0 flex-1 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400"
+            />
+
+            <button
+              type="button"
+              onClick={submitCustomQuestion}
+              disabled={isLoading}
+              className="rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-60"
+            >
+              {t.send}
+            </button>
+          </div>
+
+          {(selectedQuestion || isLoading || answer) ? (
             <div className="mt-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/30 p-4 text-sm text-cyan-100">
-              <p className="font-bold">{selectedQuestion}</p>
-              <p className="mt-2 text-slate-300">{t.localHelp}</p>
+              {selectedQuestion ? <p className="font-bold">{selectedQuestion}</p> : null}
+              <p className="mt-2 whitespace-pre-wrap text-slate-300">
+                {isLoading ? t.loading : answer}
+              </p>
             </div>
           ) : null}
         </div>

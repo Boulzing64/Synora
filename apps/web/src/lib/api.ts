@@ -195,3 +195,13 @@ export type BadgesResponse = {
 export function getBadges(walletAddress: string) {
   return getJson<BadgesResponse>(`/badges/${walletAddress}`);
 }
+
+export type AssistantChatResponse = {
+  answer: string;
+};
+
+export function askAssistant(message: string) {
+  return postJson<AssistantChatResponse>("/assistant/chat", {
+    message,
+  });
+}
