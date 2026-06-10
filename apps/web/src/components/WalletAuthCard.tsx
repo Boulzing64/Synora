@@ -46,9 +46,23 @@ export function WalletAuthCard() {
   const [rewardAuthorizationStatus, setRewardAuthorizationStatus] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    setLocale(getInitialLocale());
-  }, []);
+ useEffect(() => {
+  setLocale(getInitialLocale());
+
+  function onLocaleChange(event: Event) {
+    const customEvent = event as CustomEvent<SynoraLocale>;
+
+    if (customEvent.detail === "fr" || customEvent.detail === "en") {
+      setLocale(customEvent.detail);
+    }
+  }
+
+  window.addEventListener("synora-locale-change", onLocaleChange);
+
+  return () => {
+    window.removeEventListener("synora-locale-change", onLocaleChange);
+  };
+}, []);
 
   useEffect(() => {
     const savedToken = window.localStorage.getItem(SESSION_STORAGE_KEY);
