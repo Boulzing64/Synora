@@ -470,3 +470,35 @@ Tester le staking réel sur Base Sepolia :
 4. Vérifier mise à jour dashboard
 5. Vérifier mise à jour analytics
 
+## Mise à jour staking V1
+
+### Staking on-chain
+
+- SYNStaking déployé sur Base Sepolia
+- Frontend staking interactif préparé
+- Approve SYN disponible
+- Stake SYN disponible
+- Unstake SYN disponible
+- Lecture staked balance
+- Lecture totalStaked
+
+### Analytics staking
+
+- /analytics enrichi
+- totalStakedSyn ajouté
+- stakingContractAddress ajouté
+- stakingStatus ajouté
+
+### Bonus réputation staking
+
+Règles V1:
+
+- 0 SYN stake: +0
+- 1 à 99 SYN: +5
+- 100 à 999 SYN: +15
+- 1000+ SYN: +30
+
+### Gouvernance future
+
+- governanceWeight exposé via /staking/:walletAddress
+- base prête pour délégation et vote DAO
