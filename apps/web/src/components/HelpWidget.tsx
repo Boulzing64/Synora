@@ -108,9 +108,9 @@ export function HelpWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
       {isOpen ? (
-        <div className="mb-4 w-[360px] rounded-3xl border border-cyan-400/30 bg-slate-950/95 p-5 text-white shadow-2xl shadow-cyan-950/40 backdrop-blur">
+        <div className="mb-4 max-h-[75vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-3xl border border-cyan-400/30 bg-slate-950/95 p-4 text-white shadow-2xl shadow-cyan-950/40 backdrop-blur sm:w-[360px] sm:p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
@@ -180,9 +180,9 @@ export function HelpWidget() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="group flex items-center gap-3 rounded-full border border-cyan-400/40 bg-cyan-400 px-5 py-4 font-bold text-slate-950 shadow-2xl shadow-cyan-950/40 transition hover:scale-105 hover:bg-cyan-300"
+        className="group flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400 px-4 py-3 font-bold text-slate-950 shadow-2xl shadow-cyan-950/40 transition hover:scale-105 hover:bg-cyan-300 sm:gap-3 sm:px-5 sm:py-4"
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 text-lg text-cyan-300">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-base text-cyan-300 sm:h-10 sm:w-10 sm:text-lg">
           ?
         </span>
         <span className="flex flex-col items-start leading-tight">
