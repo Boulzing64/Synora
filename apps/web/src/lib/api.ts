@@ -301,3 +301,12 @@ export function getGovernanceVotes(proposalId: string) {
   return getJson<GovernanceVotesResponse>(`/governance/proposals/${proposalId}/votes`);
 }
 
+export type RewardsHistoryResponse = {
+  walletAddress: string;
+  claims: RewardClaim[];
+};
+
+export function getRewardClaims(walletAddress: string) {
+  return getJson<RewardsHistoryResponse>(`/rewards/${walletAddress}`);
+}
+
