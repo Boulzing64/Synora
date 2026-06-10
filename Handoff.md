@@ -502,3 +502,214 @@ Règles V1:
 
 - governanceWeight exposé via /staking/:walletAddress
 - base prête pour délégation et vote DAO
+
+# Mise à jour Gouvernance V1 → V4
+
+## Gouvernance V1
+
+### Sécurisation API
+
+Modifications réalisées :
+
+- Authentification JWT obligatoire pour créer une proposition
+- Authentification JWT obligatoire pour voter
+- Suppression du walletAddress fourni par le frontend
+- Utilisation exclusive du wallet authentifié côté backend
+
+### Sécurité
+
+Risques corrigés :
+
+- Usurpation d'identité via walletAddress arbitraire
+- Manipulation du poids de vote depuis le frontend
+
+---
+
+## Gouvernance V2
+
+### Intégration du staking réel
+
+Implémentation :
+
+- Extraction du calcul governanceWeight dans une fonction réutilisable
+- Réutilisation dans :
+
+  - GET /staking/:walletAddress
+  - POST /governance/proposals
+  - POST /governance/proposals/:proposalId/vote
+
+### Règles
+
+Création de proposition :
+
+- Minimum 10 SYN stakés
+
+Vote :
+
+- Minimum 1 SYN staké
+- Poids de vote = governanceWeight réel
+
+---
+
+## Gouvernance V3
+
+### Cycle de vie des propositions
+
+Ajouts :
+
+- Statut ACTIVE
+- Statut CLOSED
+- Expiration automatique après 7 jours
+
+### Protection des votes
+
+Ajouts :
+
+- Anti double-vote
+- Un wallet ne peut voter qu'une seule fois par proposition
+
+Erreurs gérées :
+
+- WALLET_ALREADY_VOTED
+- GOVERNANCE_PROPOSAL_CLOSED
+
+---
+
+## Gouvernance V4
+
+### Persistance PostgreSQL
+
+Nouvelles migrations :
+
+005_create_governance_proposals
+
+Table :
+
+- governance_proposals
+
+Colonnes :
+
+- id
+- title
+- description
+- creator_wallet
+- status
+- votes_for
+- votes_against
+- created_at
+- expires_at
+
+006_create_governance_votes
+
+Table :
+
+- governance_votes
+
+Colonnes :
+
+- proposal_id
+- wallet_address
+- choice
+- weight
+- created_at
+
+Contraintes :
+
+- PRIMARY KEY(proposal_id, wallet_address)
+
+Index :
+
+- idx_governance_votes_proposal
+- idx_governance_proposals_status_created
+
+### Repository Gouvernance
+
+Migration complète du stockage :
+
+Avant :
+
+- Map mémoire proposals
+- Map mémoire votes
+
+Après :
+
+- PostgreSQL
+- Fallback mémoire conservé si DATABASE_URL absent
+
+Bénéfices :
+
+- Persistance après redémarrage
+- Historique permanent
+- Préparation DAO
+- Préparation délégation
+- Préparation gouvernance on-chain
+
+---
+
+## Tests validés
+
+Validation complète :
+
+- npm run build
+- npm run test:api
+
+Résultat :
+
+- Build OK
+- Tests OK
+- Déploiement GitHub OK
+
+---
+
+# Etat actuel du projet
+
+Version :
+
+SYNORA Beta v0.1.0
+
+Modules opérationnels :
+
+- Auth Wallet
+- Réputation
+- Rewards
+- Dashboard
+- Analytics
+- Staking
+- Gouvernance persistante PostgreSQL
+
+---
+
+# Prochain sprint recommandé
+
+Priorité 1
+
+Gouvernance V5
+
+Ajouter :
+
+- Quorum minimum
+- Historique des votes exposé par API
+- Temps restant avant expiration
+- Affichage CLOSED dans le frontend
+
+Priorité 2
+
+Gouvernance V6
+
+Ajouter :
+
+- Délégation de vote
+- Snapshot staking
+- Pondération avancée
+
+Priorité 3
+
+Gouvernance V7
+
+Préparer :
+
+- Contrat Governor
+- Votes on-chain
+- Exécution des propositions
+- DAO SYNORA
+
