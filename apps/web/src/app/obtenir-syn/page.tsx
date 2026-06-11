@@ -141,9 +141,11 @@ export default function GetSynPage() {
             {program ? `${program.remainingPlaces} / ${program.maxTesters}` : "..."}
           </p>
           <p className="mt-1 text-sm text-slate-400">
-            {program?.registrationOpen
-              ? "Inscriptions ouvertes"
-              : "Inscriptions fermees"}
+            {!program
+              ? "Chargement du programme..."
+              : program.registrationOpen
+                ? "Inscriptions ouvertes"
+                : "Inscriptions fermees"}
           </p>
         </div>
 
