@@ -4,8 +4,8 @@ import { WalletAuthCard } from "@/components/WalletAuthCard";
 export default function DashboardPage() {
   return (
     <SynoraShell
-      title="Dashboard"
-      subtitle="Connect MetaMask, authenticate by signature, read SYN balance and manage rewards."
+      title="Ton identite Web3"
+      subtitle="Suis ta reputation, comprends ta progression et choisis ta prochaine action utile dans l'ecosysteme SYNORA."
     >
       <WalletAuthCard />
     </SynoraShell>

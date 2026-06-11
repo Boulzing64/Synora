@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -31,6 +32,18 @@ function formatEventType(type: string) {
     .replace(/^\w/, (letter) => letter.toUpperCase());
 }
 
+function getEventPoints(type: SynoraReputationEvent["type"]) {
+  const points: Record<SynoraReputationEvent["type"], number> = {
+    PROFILE_CREATED: 25,
+    WALLET_AUTHENTICATED: 15,
+    DASHBOARD_VISITED: 5,
+    SYN_BALANCE_CONNECTED: 20,
+    REWARD_CLAIMED: 10,
+  };
+
+  return points[type];
+}
+
 export function WalletAuthCard() {
   const [locale, setLocale] = useState<SynoraLocale>("fr");
   const t = translations[locale];
@@ -46,8 +59,8 @@ export function WalletAuthCard() {
   const [rewardAuthorizationStatus, setRewardAuthorizationStatus] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
- useEffect(() => {
-  setLocale(getInitialLocale());
+  useEffect(() => {
+  queueMicrotask(() => setLocale(getInitialLocale()));
 
   function onLocaleChange(event: Event) {
     const customEvent = event as CustomEvent<SynoraLocale>;
@@ -62,7 +75,7 @@ export function WalletAuthCard() {
   return () => {
     window.removeEventListener("synora-locale-change", onLocaleChange);
   };
-}, []);
+  }, []);
 
   useEffect(() => {
     const savedToken = window.localStorage.getItem(SESSION_STORAGE_KEY);
@@ -133,11 +146,84 @@ export function WalletAuthCard() {
   }, [walletAddress]);
 
   const canClaimReward = Boolean(authToken && user && user.score >= 60);
-
-  function changeLocale(nextLocale: SynoraLocale) {
-    setLocale(nextLocale);
-    window.localStorage.setItem("synora.locale", nextLocale);
-  }
+  const score = user?.score ?? 0;
+  const scoreProgress = Math.min((score / 1000) * 100, 100);
+  const nextLevel =
+    score < 150
+      ? { label: "SILVER", target: 150 }
+      : score < 400
+        ? { label: "GOLD", target: 400 }
+        : score < 750
+          ? { label: "PLATINUM", target: 750 }
+          : { label: "MAX", target: 1000 };
+  const pointsToNextLevel = Math.max(nextLevel.target - score, 0);
+  const ui =
+    locale === "en"
+      ? {
+          identity: "Wallet identity",
+          verified: "Verified session",
+          disconnected: "Not connected",
+          overview: "Reputation overview",
+          progress: "Global progress",
+          nextLevel: "points to",
+          balance: "Available SYN",
+          rewards: "Rewards claimed",
+          activity: "Verified events",
+          recommended: "Recommended action",
+          recommendedTitle: authToken
+            ? canClaimReward
+              ? "Claim your next reward"
+              : "Increase your reputation"
+            : "Authenticate your wallet",
+          recommendedText: authToken
+            ? canClaimReward
+              ? "Your score is high enough to test the SYNORA reward flow."
+              : "Connect your SYN balance and explore the ecosystem to reach 60 points."
+            : "Sign a secure message to unlock reputation, rewards and beta access.",
+          activityTitle: "Recent activity",
+          emptyActivity: "Your verified actions will appear here.",
+          quickAccess: "Ecosystem shortcuts",
+          beta: "Founding beta",
+          staking: "Staking",
+          governance: "Governance",
+          security: "No private key is ever requested. Authentication uses a wallet signature.",
+          updated: "Updated",
+          disconnect: "Disconnect",
+          technical: "Technical reward test",
+        }
+      : {
+          identity: "Identite wallet",
+          verified: "Session verifiee",
+          disconnected: "Non connecte",
+          overview: "Vue reputation",
+          progress: "Progression globale",
+          nextLevel: "points avant",
+          balance: "SYN disponibles",
+          rewards: "Rewards reclames",
+          activity: "Evenements verifies",
+          recommended: "Action recommandee",
+          recommendedTitle: authToken
+            ? canClaimReward
+              ? "Reclame ta prochaine reward"
+              : "Augmente ta reputation"
+            : "Authentifie ton wallet",
+          recommendedText: authToken
+            ? canClaimReward
+              ? "Ton score permet maintenant de tester le parcours reward SYNORA."
+              : "Connecte ta balance SYN et explore l'ecosysteme pour atteindre 60 points."
+            : "Signe un message securise pour debloquer reputation, rewards et acces beta.",
+          activityTitle: "Activite recente",
+          emptyActivity: "Tes actions verifiees apparaitront ici.",
+          quickAccess: "Raccourcis ecosysteme",
+          beta: "Founding beta",
+          staking: "Staking",
+          governance: "Gouvernance",
+          security:
+            "Aucune cle privee n'est demandee. L'authentification utilise une signature wallet.",
+          updated: "Mis a jour",
+          disconnect: "Deconnecter",
+          technical: "Test technique reward",
+        };
 
   async function refreshEvents(currentWalletAddress: string) {
     const eventsResponse = await getReputationEvents(currentWalletAddress);
@@ -392,179 +478,222 @@ export function WalletAuthCard() {
   }
 
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-      <div className="flex flex-col gap-6">
-        <div>
+    <div className="grid gap-5 xl:grid-cols-[1.45fr_0.75fr]">
+      <div className="space-y-5">
+        <section className="premium-panel overflow-hidden rounded-[28px] p-5 sm:p-7">
+          <div className="flex flex-col gap-7 lg:flex-row lg:items-center">
+            <div
+              className="relative grid h-40 w-40 shrink-0 place-items-center rounded-full"
+              style={{
+                background: `conic-gradient(#43d9ff ${scoreProgress}%, rgba(255,255,255,0.06) ${scoreProgress}%)`,
+              }}
+            >
+              <div className="grid h-[138px] w-[138px] place-items-center rounded-full bg-[#07101f] text-center">
+                <div>
+                  <p className="text-5xl font-black tracking-[-0.06em]">{score}</p>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300">
+                    Synora Score
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1.5 text-xs font-bold text-cyan-200">
+                  {user?.level ?? "BRONZE"}
+                </span>
+                <span
+                  className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
+                    authToken
+                      ? "border-emerald-400/20 bg-emerald-400/[0.06] text-emerald-300"
+                      : "border-white/10 bg-white/[0.03] text-slate-500"
+                  }`}
+                >
+                  {authToken ? ui.verified : ui.disconnected}
+                </span>
+              </div>
+
+              <p className="mt-5 text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
+                {ui.identity}
+              </p>
+              <h2 className="mt-2 break-all font-mono text-xl font-bold text-white sm:text-2xl">
+                {shortWallet}
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">{status}</p>
+
+              <div className="mt-6">
+                <div className="flex justify-between gap-4 text-xs font-semibold text-slate-500">
+                  <span>{ui.progress}</span>
+                  <span>
+                    {pointsToNextLevel} {ui.nextLevel} {nextLevel.label}
+                  </span>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-violet-400 transition-all duration-700"
+                    style={{ width: `${scoreProgress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            {[
+              [ui.balance, `${synBalance} SYN`],
+              [ui.rewards, String(user?.rewardsClaimed ?? 0)],
+              [ui.activity, String(reputation?.eventsCount ?? 0)],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
+                <p className="text-xs font-semibold text-slate-500">{label}</p>
+                <p className="mt-2 text-2xl font-black">{value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="premium-panel rounded-[28px] p-5 sm:p-7">
           <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
-              Dashboard utilisateur
-            </p>
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => changeLocale("fr")}
-                className="rounded-xl border border-slate-700 px-3 py-2 text-sm font-bold hover:bg-slate-800"
-              >
-                FR
-              </button>
-
-              <button
-                type="button"
-                onClick={() => changeLocale("en")}
-                className="rounded-xl border border-slate-700 px-3 py-2 text-sm font-bold hover:bg-slate-800"
-              >
-                EN
-              </button>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-400">
+                {ui.activityTitle}
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                {reputation ? `${ui.updated} ${new Date(reputation.updatedAt).toLocaleString(locale)}` : ui.emptyActivity}
+              </p>
             </div>
+            <Link href="/reputation" className="text-xs font-bold text-cyan-300 hover:text-cyan-200">
+              {locale === "en" ? "Full history →" : "Historique complet →"}
+            </Link>
           </div>
 
-          <h2 className="mt-3 text-3xl font-bold">{t.dashboardTitle}</h2>
-
-          <p className="mt-3 text-slate-300">{t.dashboardSubtitle}</p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">{t.wallet}</p>
-            <p className="mt-2 break-all font-mono text-sm text-cyan-300">{shortWallet}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">{t.balance}</p>
-            <p className="mt-2 text-2xl font-bold">{synBalance}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">{t.status}</p>
-            <p className="mt-2 text-sm font-semibold">{status}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm text-slate-400">{t.session}</p>
-            <p className="mt-2 text-sm font-semibold">
-              {authToken ? t.connected : t.notAuthenticated}
-            </p>
-          </div>
-        </div>
-
-        {user ? (
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">{t.score}</p>
-              <p className="mt-2 text-3xl font-bold">{user.score}</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">{t.level}</p>
-              <p className="mt-2 text-3xl font-bold">{user.level}</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">{t.rewards}</p>
-              <p className="mt-2 text-3xl font-bold">{user.rewardsClaimed}</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-              <p className="text-sm text-slate-400">{t.events}</p>
-              <p className="mt-2 text-3xl font-bold">{reputation?.eventsCount ?? 0}</p>
-            </div>
-          </div>
-        ) : null}
-
-        {reputation ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 text-sm text-slate-300">
-            Derniere mise a jour reputation:{" "}
-            <span className="font-mono text-cyan-300">{reputation.updatedAt}</span>
-          </div>
-        ) : null}
-
-        {events.length > 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-400">
-              {t.recentHistory}
-            </p>
-
-            <div className="mt-4 flex flex-col gap-3">
-              {events.map((event, index) => (
+          <div className="mt-6 space-y-1">
+            {events.length > 0 ? (
+              [...events].reverse().slice(0, 6).map((event, index) => (
                 <div
                   key={`${event.type}-${event.createdAt}-${index}`}
-                  className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                  className="flex items-center gap-4 border-b border-white/[0.05] py-4 last:border-0"
                 >
-                  <p className="font-semibold">{formatEventType(event.type)}</p>
-                  <p className="mt-1 text-sm text-slate-400">{event.createdAt}</p>
-                  {typeof event.value === "number" ? (
-                    <p className="mt-1 text-sm text-cyan-300">Valeur: {event.value}</p>
-                  ) : null}
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-cyan-400/15 bg-cyan-400/[0.05] text-xs font-black text-cyan-300">
+                    +{getEventPoints(event.type) + (event.value ?? 0)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-200">{formatEventType(event.type)}</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {new Date(event.createdAt).toLocaleString(locale)}
+                    </p>
+                  </div>
+                  <span className="hidden text-xs font-semibold text-emerald-400 sm:block">
+                    VERIFIED
+                  </span>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-slate-600">
+                {ui.emptyActivity}
+              </div>
+            )}
           </div>
-        ) : null}
+        </section>
+      </div>
+
+      <div className="space-y-5">
+        <section className="rounded-[28px] border border-cyan-300/15 bg-gradient-to-br from-cyan-300/[0.08] via-[#0a1526] to-violet-400/[0.06] p-5 sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-300">
+            {ui.recommended}
+          </p>
+          <h3 className="mt-4 text-2xl font-black">{ui.recommendedTitle}</h3>
+          <p className="mt-3 text-sm leading-6 text-slate-400">{ui.recommendedText}</p>
+
+          <button
+            type="button"
+            onClick={
+              authToken
+                ? canClaimReward
+                  ? claimReward
+                  : refreshBalance
+                : connectAndAuthenticate
+            }
+            disabled={isLoading}
+            className="mt-6 w-full rounded-2xl bg-cyan-300 px-5 py-3.5 text-sm font-black text-[#03101b] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoading
+              ? "..."
+              : authToken
+                ? canClaimReward
+                  ? t.claimReward
+                  : t.refreshBalance
+                : t.connectSign}
+          </button>
+
+          <p className="mt-4 text-xs leading-5 text-slate-600">{ui.security}</p>
+        </section>
+
+        <section className="premium-panel rounded-[28px] p-5 sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
+            {ui.quickAccess}
+          </p>
+          <div className="mt-4 grid gap-2">
+            {[
+              ["/obtenir-syn", ui.beta, "100 SYN"],
+              ["/staking", ui.staking, locale === "en" ? "Voting power" : "Poids DAO"],
+              ["/governance", ui.governance, locale === "en" ? "Proposals" : "Propositions"],
+            ].map(([href, label, meta]) => (
+              <Link
+                key={href}
+                href={href}
+                className="premium-card flex items-center justify-between rounded-2xl px-4 py-4"
+              >
+                <span className="font-bold text-slate-200">{label}</span>
+                <span className="text-xs font-semibold text-slate-500">{meta} →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="premium-panel rounded-[28px] p-5 sm:p-6">
+          <div className="grid gap-2">
+            <button
+              type="button"
+              onClick={refreshBalance}
+              disabled={isLoading || !walletAddress}
+              className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-slate-300 transition hover:bg-white/[0.04] disabled:opacity-40"
+            >
+              {t.refreshBalance}
+            </button>
+            <button
+              type="button"
+              onClick={testRewardAuthorization}
+              disabled={isLoading || !authToken}
+              className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-slate-400 transition hover:bg-white/[0.04] disabled:opacity-40"
+            >
+              {ui.technical}
+            </button>
+            {authToken ? (
+              <button
+                type="button"
+                onClick={disconnect}
+                className="rounded-xl px-4 py-3 text-sm font-bold text-red-300 transition hover:bg-red-400/[0.05]"
+              >
+                {ui.disconnect}
+              </button>
+            ) : null}
+          </div>
+        </section>
 
         {rewardAuthorizationStatus ? (
-          <div className="rounded-2xl border border-cyan-500/40 bg-cyan-950/40 p-4 text-sm text-cyan-200">
+          <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-4 text-sm text-cyan-200">
             {rewardAuthorizationStatus}
           </div>
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-red-500/40 bg-red-950/40 p-4 text-sm text-red-200">
+          <div className="rounded-2xl border border-red-400/20 bg-red-400/[0.06] p-4 text-sm text-red-200">
             {error}
           </div>
         ) : null}
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <button
-            type="button"
-            onClick={connectAndAuthenticate}
-            disabled={isLoading}
-            className="rounded-2xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoading ? "..." : t.connectSign}
-          </button>
-
-          <button
-            type="button"
-            onClick={refreshBalance}
-            disabled={isLoading || !walletAddress}
-            className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {t.refreshBalance}
-          </button>
-
-          <button
-            type="button"
-            onClick={claimReward}
-            disabled={isLoading || !canClaimReward}
-            className="rounded-2xl border border-cyan-500 px-5 py-3 font-bold text-cyan-200 transition hover:bg-cyan-950 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {t.claimReward}
-          </button>
-
-          <button
-            type="button"
-            onClick={testRewardAuthorization}
-            disabled={isLoading || !authToken}
-            className="rounded-2xl border border-emerald-500 px-5 py-3 font-bold text-emerald-200 transition hover:bg-emerald-950 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {t.testRewardsAuth}
-          </button>
-
-          <button
-            type="button"
-            onClick={disconnect}
-            className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
-          >
-            {t.reset}
-          </button>
-        </div>
-
-        <p className="text-sm text-slate-400">
-          Condition MVP claim: session authentifiee et score superieur ou egal a 60.
-          Ce claim est off-chain et sert a valider le parcours recompense avant un contrat rewards.
-        </p>
       </div>
-    </section>
+    </div>
   );
 }
