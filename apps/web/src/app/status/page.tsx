@@ -22,7 +22,7 @@ const text = {
     network: "Reseau",
     token: "Token SYNORA",
     rewardsDistributor: "RewardsDistributor",
-    funded: "Finance avec 1000 SYN sur Base Sepolia.",
+    funded: "Finance avec 21 000 SYN sur Base Sepolia pour la cohorte beta.",
   },
   en: {
     title: "Status",
@@ -32,7 +32,7 @@ const text = {
     network: "Network",
     token: "SYNORA Token",
     rewardsDistributor: "RewardsDistributor",
-    funded: "Funded with 1000 SYN on Base Sepolia.",
+    funded: "Funded with 21,000 SYN on Base Sepolia for the beta cohort.",
   },
 } as const;
 

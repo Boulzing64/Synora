@@ -13,8 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SYNORA",
-  description: "Web3 reputation, rewards and AI assistant on Base Sepolia.",
+  title: {
+    default: "SYNORA | Intelligent Web3 Reputation",
+    template: "%s | SYNORA",
+  },
+  description:
+    "SYNORA transforms useful wallet activity into dynamic reputation, rewards and governance power.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.ico",
@@ -23,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#22d3ee",
+  themeColor: "#050a14",
 };
 
 export default function RootLayout({
@@ -33,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="fr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
