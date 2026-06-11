@@ -1013,3 +1013,440 @@ Analytics : Opérationnels
 
 Phase actuelle : BETA TESTERS + CROISSANCE COMMUNAUTÉ
 
+# HANDOFF UPDATE — Sécurité & Programme Bêta (Juin 2026)
+
+## Section Beta Tester Home
+
+Nouvelle section ajoutée sur la page d'accueil.
+
+Objectif :
+
+- Mettre en avant le programme bêta SYNORA
+- Utiliser l'espace disponible de la Home
+- Présenter les avantages du programme bêta
+- Préparer l'arrivée des premiers utilisateurs
+
+Contenu ajouté :
+
+- Rejoins la bêta SYNORA
+- 100 SYN de test
+- Gouvernance DAO
+- Staking
+- Bouton d'accès rapide vers le Dashboard
+
+Internationalisation :
+
+FR :
+
+- Beta testeurs
+- Rejoins la bêta SYNORA
+- Chaque bêta-testeur recevra 100 SYN de test pour essayer le staking, les rewards et la gouvernance DAO.
+
+EN :
+
+- Beta testers
+- Join the SYNORA beta
+- Each beta tester will receive 100 test SYN to try staking, rewards and DAO governance.
+
+Traductions ajoutées :
+
+- betaStatSyn
+- betaStatDao
+- betaStatStaking
+
+La Home est désormais utilisée de manière plus efficace et prépare l'intégration des futurs bêta-testeurs.
+
+---
+
+## Audit Sécurité Réalisé
+
+### GitHub
+
+Vérifications effectuées :
+
+- Aucun fichier .env versionné
+- Seul .env.example est présent dans Git
+- Repository synchronisé
+- Git status vérifié
+
+Applications supprimées :
+
+- Ionic
+- Netlify
+- Azure Pipelines
+
+Applications conservées :
+
+- Render
+- Vercel
+
+Résultat :
+
+Aucune fuite de secret détectée.
+
+---
+
+### Render
+
+Variables vérifiées :
+
+- DATABASE_URL
+- JWT_SECRET
+- OPENAI_API_KEY
+- REWARDS_SIGNER_PRIVATE_KEY
+- BASE_SEPOLIA_RPC_URL
+- SYN_TOKEN_ADDRESS
+- SYN_STAKING_ADDRESS
+- REWARDS_DISTRIBUTOR_ADDRESS
+- WEB_ORIGIN
+
+PostgreSQL :
+
+- Connecté
+- Migrations appliquées
+- Production opérationnelle
+
+---
+
+### Vercel
+
+Variables publiques vérifiées :
+
+- NEXT_PUBLIC_API_URL
+- NEXT_PUBLIC_SYN_TOKEN_ADDRESS
+- NEXT_PUBLIC_SYN_STAKING_ADDRESS
+- NEXT_PUBLIC_CHAIN_ID
+- NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL
+
+Aucune variable sensible backend détectée sur Vercel.
+
+---
+
+### Supabase
+
+Ancien projet :
+
+- synora-protocol
+
+Action :
+
+- Projet supprimé
+
+Raison :
+
+- Non utilisé
+- Alerte sécurité RLS
+- Réduction de la surface d'attaque
+
+Résultat :
+
+Architecture simplifiée.
+
+---
+
+## Architecture Actuelle
+
+Infrastructure officielle SYNORA :
+
+GitHub
+
+- Vercel
+- Render API
+- Render PostgreSQL
+- Base Sepolia
+
+Aucune dépendance Supabase.
+
+---
+
+## État du Projet
+
+Frontend :
+
+- Stable
+- Déployé
+
+Backend :
+
+- Stable
+- Déployé
+
+Base de données :
+
+- PostgreSQL opérationnel
+
+Analytics :
+
+- Fonctionnels
+
+DAO :
+
+- Fonctionnelle
+
+Staking :
+
+- Fonctionnel
+
+Rewards :
+
+- Fonctionnels
+
+Sécurité :
+
+- Auditée
+- Nettoyée
+
+Git :
+
+- Synchronisé
+- Repository propre
+
+---
+
+## Prochaines Priorités
+
+### Priorité 1
+
+Créer le programme bêta réel :
+
+- Distribution automatique de 100 SYN
+- Attribution après connexion wallet
+- Historique des distributions
+
+### Priorité 2
+
+Créer le badge :
+
+- Founding Beta Tester
+
+### Priorité 3
+
+Créer la page :
+
+/obtenir-syn
+
+Contenu :
+
+- Présentation du programme bêta
+- Guide Wallet
+- Guide Base Sepolia
+- Gouvernance
+- Staking
+- Rewards
+
+### Priorité 4
+
+Analytics bêta :
+
+- Nombre de bêta-testeurs
+- SYN distribués
+- SYN stakés
+- Votes DAO
+- Utilisateurs actifs
+
+### Priorité 5
+
+Préparation Mainnet :
+
+- Tokenomics SYNORA
+- Distribution future
+- Pool de liquidité
+- Migration Base Mainnet
+
+---
+
+## Statut
+
+SYNORA est désormais dans sa phase :
+
+BETA TESTERS + CROISSANCE COMMUNAUTAIRE
+
+L'objectif principal n'est plus le développement de l'infrastructure mais l'arrivée des premiers utilisateurs réels.
+
+---
+
+# HANDOFF UPDATE — FAQ, Recrutement et Feedback (11 juin 2026)
+
+## Version et déploiement
+
+Version de travail :
+
+- SYNORA Beta v0.2.0
+- Branche : `main`
+- Frontend : https://synora-web.vercel.app
+- API : https://synora-api.onrender.com
+- Réseau : Base Sepolia
+- Chain ID : `84532`
+
+Derniers commits déployés :
+
+- `f7c2a3d` — kit de communication et formulaire de feedback
+- `93bbbc9` — recrutement bêta et suivi des canaux d'acquisition
+- `f917550` — installation mobile visible et configuration bêta renforcée
+- `60aa684` — tableau de bord administrateur sécurisé
+
+## Nouvelles pages
+
+- `/beta` : page publique de recrutement des 100 testeurs
+- `/feedback` : formulaire structuré de retour bêta
+- `/faq` : questions fréquentes SYNORA
+- `/download` : installation PWA et téléchargement Android bêta
+- `/connexion` : connexion email par lien magique
+- `/admin` : pilotage de la cohorte et des retours
+
+## FAQ publique
+
+La FAQ couvre :
+
+- présentation de SYNORA
+- fonctionnement de la Founding Beta
+- absence de valeur financière garantie des SYN testnet
+- réception des 100 SYN de test
+- authentification par signature
+- frais de gas et Base Sepolia
+- sécurité du wallet
+- réputation
+- staking et rewards
+- connexion email
+- installation mobile
+- signalement des bugs et feedback
+
+Fonctionnalités :
+
+- recherche instantanée
+- accordéons par question
+- contenu français et anglais
+- liens directs vers les pages concernées
+- rappel de sécurité visible
+- accès depuis le centre d'aide IA
+
+## Parcours de recrutement bêta
+
+Liens mesurés :
+
+- Fondateur : `https://synora-web.vercel.app/beta?source=founder`
+- Communauté : `https://synora-web.vercel.app/beta?source=community`
+- Réseaux sociaux : `https://synora-web.vercel.app/beta?source=social`
+- Partenaire : `https://synora-web.vercel.app/beta?source=partner`
+
+Le premier canal utilisé avant le claim est enregistré avec l'inscription bêta.
+
+Le tableau administrateur affiche :
+
+- inscriptions par canal
+- claims confirmés par canal
+- taux de conversion
+- places restantes
+- feedbacks récents
+
+## Kit de communication
+
+Fichier :
+
+`docs/beta-communication-kit.md`
+
+Contenu :
+
+- message Discord
+- publication X
+- message Telegram
+- invitation privée
+- messages de relance
+- réponses aux objections fréquentes
+- cadence de publication recommandée
+
+## Formulaire de feedback
+
+Route :
+
+`/feedback`
+
+Informations recueillies :
+
+- note globale de 1 à 5
+- mission principalement testée
+- appareil et navigateur
+- progression atteinte
+- blocage rencontré
+- point positif
+- amélioration prioritaire
+
+Le retour est lié au wallet authentifié et visible dans `/admin`.
+
+## Programme Founding Beta
+
+Limite :
+
+- 100 wallets
+
+Attribution :
+
+- 100 SYN testnet par wallet
+
+Protections :
+
+- authentification JWT
+- autorisation EIP-712
+- inscription PostgreSQL unique
+- fermeture atomique à la limite configurée
+- anti-double claim on-chain
+- confirmation du receipt Base Sepolia
+
+## Mobile et PWA
+
+L'installation est accessible :
+
+- dans la barre supérieure mobile
+- dans le menu
+- sur `/download`
+
+Comportement :
+
+- Android Chrome : prompt d'installation ou guide
+- iPhone Safari : Partager puis Sur l'écran d'accueil
+- ordinateur : installation depuis Chrome ou Edge
+
+## Authentification email
+
+Fonctionnement :
+
+- lien magique à usage unique
+- expiration après 15 minutes
+- session email de 7 jours
+- association facultative avec un wallet authentifié
+
+Variables Render nécessaires :
+
+- `RESEND_API_KEY`
+- `MAGIC_LINK_FROM_EMAIL`
+
+Sans ces variables, la connexion wallet continue de fonctionner.
+
+## Validation technique
+
+Dernières validations :
+
+- lint frontend : OK
+- build Next.js : OK
+- build API TypeScript : OK
+- tests API : OK
+- tests réputation : OK
+- tests notifications : OK
+- tests autorisations EIP-712 : OK
+- tests Solidity : 8/8
+- CI GitHub Actions : OK
+- frontend production : HTTP 200
+- API production : HTTP 200
+
+## Prochaine action recommandée
+
+1. Publier le message Discord et Telegram avec `source=community`.
+2. Publier le message X avec `source=social`.
+3. Inviter personnellement 10 testeurs fiables avec `source=founder`.
+4. Vérifier chaque jour `/admin`.
+5. Classer les retours selon : blocage, fréquence et impact.
+6. Corriger d'abord les problèmes qui empêchent de terminer le parcours.
+
+Phase actuelle :
+
+**RECRUTEMENT DES 100 TESTEURS + MESURE DE L'EXPÉRIENCE UTILISATEUR**

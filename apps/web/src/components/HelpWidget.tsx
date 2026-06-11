@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { askAssistant } from "@/lib/api";
@@ -16,6 +17,7 @@ const text = {
     buttonMain: "Besoin d'aide ?",
     placeholder: "Ecris ta question...",
     send: "Envoyer",
+    faq: "Consulter toute la FAQ",
     loading: "Reponse en cours...",
     fallback:
       "Je peux t'aider a comprendre SYNORA, ton wallet, les rewards et la reputation.",
@@ -36,6 +38,7 @@ const text = {
     buttonMain: "Need help?",
     placeholder: "Type your question...",
     send: "Send",
+    faq: "View the full FAQ",
     loading: "Answering...",
     fallback:
       "I can help you understand SYNORA, your wallet, rewards and reputation.",
@@ -141,6 +144,14 @@ export function HelpWidget() {
               </button>
             ))}
           </div>
+
+          <Link
+            href="/faq"
+            onClick={() => setIsOpen(false)}
+            className="mt-4 flex items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] px-4 py-3 text-sm font-bold text-cyan-200 transition hover:bg-cyan-300/10 hover:text-white"
+          >
+            {t.faq}
+          </Link>
 
           <div className="mt-5 flex gap-2">
             <input

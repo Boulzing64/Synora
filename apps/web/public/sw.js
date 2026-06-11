@@ -1,8 +1,10 @@
-const CACHE_NAME = "synora-shell-v1";
+const CACHE_NAME = "synora-shell-v2";
 const CORE_ASSETS = [
   "/",
   "/dashboard",
   "/download",
+  "/faq",
+  "/feedback",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
