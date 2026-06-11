@@ -272,6 +272,27 @@ export type EmailAccount = {
   updatedAt: string;
 };
 
+export type AdminRecentWallet = {
+  walletAddress: string;
+  score: number;
+  eventsCount: number;
+  rewardsClaimed: number;
+  updatedAt: string;
+};
+
+export type AdminOperationsData = {
+  totalEmailAccounts: number;
+  linkedEmailAccounts: number;
+  authenticatedWallets: number;
+  balanceConnectedWallets: number;
+  reputationQualifiedWallets: number;
+  feedbackCount: number;
+  averageFeedbackRating: number;
+  recentEmailAccounts: EmailAccount[];
+  recentWallets: AdminRecentWallet[];
+  recentFeedback: BetaFeedback[];
+};
+
 type EmailMagicLink = {
   tokenHash: string;
   accountId: string;
@@ -1197,5 +1218,153 @@ export async function linkEmailAccountWallet(
   );
 
   return result.rows[0] ? mapEmailAccountRow(result.rows[0]) : null;
+}
+
+function calculateMemoryScore(events: ReputationEvent[]) {
+  return events.reduce((total, event) => {
+    if (event.type === "PROFILE_CREATED") return total + 25;
+    if (event.type === "WALLET_AUTHENTICATED") return total + 15;
+    if (event.type === "DASHBOARD_VISITED") return total + 5;
+    if (event.type === "SYN_BALANCE_CONNECTED") return total + 20;
+    if (event.type === "REWARD_CLAIMED") {
+      return total + 10 + Math.max(0, event.value ?? 0);
+    }
+    return total;
+  }, 0);
+}
+
+export async function getAdminOperationsData(): Promise<AdminOperationsData> {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    const emailAccounts = Array.from(memoryEmailAccounts.values()).sort((a, b) =>
+      b.updatedAt.localeCompare(a.updatedAt)
+    );
+    const feedback = Array.from(memoryBetaFeedbackStore.values()).sort((a, b) =>
+      b.updatedAt.localeCompare(a.updatedAt)
+    );
+    const wallets = Array.from(memoryReputationEventsStore.entries())
+      .map(([walletAddress, events]) => ({
+        walletAddress,
+        score: calculateMemoryScore(events),
+        eventsCount: events.length,
+        rewardsClaimed: events.filter(
+          (event) => event.type === "REWARD_CLAIMED"
+        ).length,
+        updatedAt: events.at(-1)?.createdAt ?? new Date(0).toISOString(),
+      }))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+
+    return {
+      totalEmailAccounts: emailAccounts.length,
+      linkedEmailAccounts: emailAccounts.filter(
+        (account) => account.walletAddress
+      ).length,
+      authenticatedWallets: Array.from(
+        memoryReputationEventsStore.values()
+      ).filter((events) =>
+        events.some((event) => event.type === "WALLET_AUTHENTICATED")
+      ).length,
+      balanceConnectedWallets: Array.from(
+        memoryReputationEventsStore.values()
+      ).filter((events) =>
+        events.some((event) => event.type === "SYN_BALANCE_CONNECTED")
+      ).length,
+      reputationQualifiedWallets: wallets.filter((wallet) => wallet.score >= 60)
+        .length,
+      feedbackCount: feedback.length,
+      averageFeedbackRating:
+        feedback.length > 0
+          ? feedback.reduce((total, item) => total + item.rating, 0) /
+            feedback.length
+          : 0,
+      recentEmailAccounts: emailAccounts.slice(0, 12),
+      recentWallets: wallets.slice(0, 12),
+      recentFeedback: feedback.slice(0, 20),
+    };
+  }
+
+  const [summaryResult, accountsResult, walletsResult, feedbackResult] =
+    await Promise.all([
+      databasePool.query(`
+        WITH wallet_scores AS (
+          SELECT
+            wallet_address,
+            SUM(
+              CASE
+                WHEN type = 'PROFILE_CREATED' THEN 25
+                WHEN type = 'WALLET_AUTHENTICATED' THEN 15
+                WHEN type = 'DASHBOARD_VISITED' THEN 5
+                WHEN type = 'SYN_BALANCE_CONNECTED' THEN 20
+                WHEN type = 'REWARD_CLAIMED' THEN 10 + GREATEST(COALESCE(value, 0), 0)
+                ELSE 0
+              END
+            )::INTEGER AS score
+          FROM reputation_events
+          GROUP BY wallet_address
+        )
+        SELECT
+          (SELECT COUNT(*)::INTEGER FROM email_accounts) AS total_email_accounts,
+          (SELECT COUNT(*)::INTEGER FROM email_accounts WHERE wallet_address IS NOT NULL) AS linked_email_accounts,
+          (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reputation_events WHERE type = 'WALLET_AUTHENTICATED') AS authenticated_wallets,
+          (SELECT COUNT(DISTINCT wallet_address)::INTEGER FROM reputation_events WHERE type = 'SYN_BALANCE_CONNECTED') AS balance_connected_wallets,
+          (SELECT COUNT(*)::INTEGER FROM wallet_scores WHERE score >= 60) AS reputation_qualified_wallets,
+          (SELECT COUNT(*)::INTEGER FROM beta_feedback) AS feedback_count,
+          COALESCE((SELECT AVG(rating)::NUMERIC FROM beta_feedback), 0) AS average_feedback_rating
+      `),
+      databasePool.query(`
+        SELECT id, email, wallet_address, created_at, updated_at
+        FROM email_accounts
+        ORDER BY updated_at DESC
+        LIMIT 12
+      `),
+      databasePool.query(`
+        SELECT
+          wallet_address,
+          COUNT(*)::INTEGER AS events_count,
+          SUM(
+            CASE
+              WHEN type = 'PROFILE_CREATED' THEN 25
+              WHEN type = 'WALLET_AUTHENTICATED' THEN 15
+              WHEN type = 'DASHBOARD_VISITED' THEN 5
+              WHEN type = 'SYN_BALANCE_CONNECTED' THEN 20
+              WHEN type = 'REWARD_CLAIMED' THEN 10 + GREATEST(COALESCE(value, 0), 0)
+              ELSE 0
+            END
+          )::INTEGER AS score,
+          COUNT(*) FILTER (WHERE type = 'REWARD_CLAIMED')::INTEGER AS rewards_claimed,
+          MAX(created_at) AS updated_at
+        FROM reputation_events
+        GROUP BY wallet_address
+        ORDER BY updated_at DESC
+        LIMIT 12
+      `),
+      databasePool.query(`
+        SELECT wallet_address, rating, category, comment, created_at, updated_at
+        FROM beta_feedback
+        ORDER BY updated_at DESC
+        LIMIT 20
+      `),
+    ]);
+  const summary = summaryResult.rows[0];
+
+  return {
+    totalEmailAccounts: Number(summary.total_email_accounts),
+    linkedEmailAccounts: Number(summary.linked_email_accounts),
+    authenticatedWallets: Number(summary.authenticated_wallets),
+    balanceConnectedWallets: Number(summary.balance_connected_wallets),
+    reputationQualifiedWallets: Number(summary.reputation_qualified_wallets),
+    feedbackCount: Number(summary.feedback_count),
+    averageFeedbackRating: Number(summary.average_feedback_rating),
+    recentEmailAccounts: accountsResult.rows.map(mapEmailAccountRow),
+    recentWallets: walletsResult.rows.map((row) => ({
+      walletAddress: String(row.wallet_address),
+      score: Number(row.score),
+      eventsCount: Number(row.events_count),
+      rewardsClaimed: Number(row.rewards_claimed),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    })),
+    recentFeedback: feedbackResult.rows.map(mapBetaFeedbackRow),
+  };
 }
 

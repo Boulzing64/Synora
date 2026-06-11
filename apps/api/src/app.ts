@@ -49,6 +49,7 @@ import {
   getAnalytics,
   getBetaFeedback,
   consumeEmailMagicLink,
+  getAdminOperationsData,
   getEmailAccountById,
   getOrCreateEmailAccount,
   getGovernanceVotersLeaderboard,
@@ -197,6 +198,18 @@ export function createSynoraApp() {
     } catch {
       return null;
     }
+  }
+
+  function isAdminWallet(walletAddress: string) {
+    const configuredWallets = (process.env.ADMIN_WALLET_ADDRESSES ?? "")
+      .split(",")
+      .map((wallet) => wallet.trim())
+      .filter((wallet) => isAddress(wallet))
+      .map((wallet) => getAddress(wallet));
+
+    return configuredWallets.some(
+      (wallet) => wallet.toLowerCase() === walletAddress.toLowerCase()
+    );
   }
 
   app.use(helmet());
@@ -1165,6 +1178,64 @@ export function createSynoraApp() {
         totalStakedSyn,
         stakingStatus,
       },
+    });
+  });
+
+  app.get("/admin/dashboard", async (request, response) => {
+    const walletAddress = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!walletAddress) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    if (!(process.env.ADMIN_WALLET_ADDRESSES ?? "").trim()) {
+      return response.status(503).json({
+        error: "ADMIN_NOT_CONFIGURED",
+      });
+    }
+
+    if (!isAdminWallet(walletAddress)) {
+      logger.warn("admin.access.denied", { walletAddress });
+      return response.status(403).json({
+        error: "ADMIN_ACCESS_DENIED",
+      });
+    }
+
+    const [operations, analytics, beta] = await Promise.all([
+      getAdminOperationsData(),
+      getAnalytics(),
+      getBetaAnalytics(),
+    ]);
+
+    logger.info("admin.dashboard.viewed", { walletAddress });
+
+    return response.json({
+      generatedAt: new Date().toISOString(),
+      adminWallet: walletAddress,
+      funnel: {
+        emailAccounts: operations.totalEmailAccounts,
+        linkedEmailAccounts: operations.linkedEmailAccounts,
+        authenticatedWallets: operations.authenticatedWallets,
+        balanceConnectedWallets: operations.balanceConnectedWallets,
+        betaRegistrations: beta.totalBetaRegistrations,
+        betaClaimedWallets: beta.totalBetaTesters,
+        reputationQualifiedWallets: operations.reputationQualifiedWallets,
+        rewardClaimers: analytics.uniqueRewardClaimers,
+        governanceVoters: analytics.uniqueGovernanceVoters,
+      },
+      overview: {
+        totalWallets: analytics.totalWallets,
+        totalEvents: analytics.totalEvents,
+        totalBetaSynDistributed: beta.totalBetaSynDistributed,
+        feedbackCount: operations.feedbackCount,
+        averageFeedbackRating: operations.averageFeedbackRating,
+        activeGovernanceProposals: analytics.activeGovernanceProposals,
+      },
+      recentEmailAccounts: operations.recentEmailAccounts,
+      recentWallets: operations.recentWallets,
+      recentFeedback: operations.recentFeedback,
     });
   });
 

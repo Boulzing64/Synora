@@ -35,6 +35,7 @@ const ecosystemNavigation = [
 
 const insightNavigation = [
   { href: "/analytics", labelFr: "Analytics", labelEn: "Analytics", icon: "pulse" },
+  { href: "/admin", labelFr: "Administration", labelEn: "Administration", icon: "admin" },
   { href: "/status", labelFr: "Infrastructure", labelEn: "Infrastructure", icon: "status" },
 ] as const;
 
@@ -55,6 +56,7 @@ function NavIcon({ name }: { name: IconName }) {
     badge: <><circle cx="12" cy="9" r="6" /><path d="m8 14-2 7 6-3 6 3-2-7" /></>,
     chart: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>,
     pulse: <><path d="M3 12h4l2-6 4 12 2-6h6" /></>,
+    admin: <><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2" /><circle cx="12" cy="7" r="4" /><path d="M17 11.5 19 13l2-2" /></>,
     status: <><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></>,
   };
 

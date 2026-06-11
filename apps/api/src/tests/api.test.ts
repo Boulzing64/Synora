@@ -14,6 +14,8 @@ process.env.REWARDS_SIGNER_PRIVATE_KEY =
 process.env.REWARDS_DISTRIBUTOR_ADDRESS = "0x0000000000000000000000000000000000000001";
 process.env.REWARDS_CHAIN_ID = "84532";
 process.env.BETA_MAX_TESTERS = "1";
+process.env.ADMIN_WALLET_ADDRESSES =
+  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 delete process.env.DATABASE_URL;
 
 const app = createSynoraApp();
@@ -248,6 +250,24 @@ const secondVerifyResponse = await request(app)
     signature: secondSignature,
   })
   .expect(200);
+
+await request(app).get("/admin/dashboard").expect(401);
+
+await request(app)
+  .get("/admin/dashboard")
+  .set("Authorization", `Bearer ${secondVerifyResponse.body.token}`)
+  .expect(403);
+
+const adminDashboardResponse = await request(app)
+  .get("/admin/dashboard")
+  .set("Authorization", `Bearer ${token}`)
+  .expect(200);
+
+assert.equal(adminDashboardResponse.body.adminWallet, account.address);
+assert.ok(
+  typeof adminDashboardResponse.body.funnel.authenticatedWallets === "number"
+);
+assert.ok(Array.isArray(adminDashboardResponse.body.recentFeedback));
 
 await request(app)
   .post("/beta/authorize")

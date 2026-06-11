@@ -380,6 +380,43 @@ export function getAnalytics() {
   return getJson<AnalyticsResponse>("/analytics");
 }
 
+export type AdminDashboardResponse = {
+  generatedAt: string;
+  adminWallet: string;
+  funnel: {
+    emailAccounts: number;
+    linkedEmailAccounts: number;
+    authenticatedWallets: number;
+    balanceConnectedWallets: number;
+    betaRegistrations: number;
+    betaClaimedWallets: number;
+    reputationQualifiedWallets: number;
+    rewardClaimers: number;
+    governanceVoters: number;
+  };
+  overview: {
+    totalWallets: number;
+    totalEvents: number;
+    totalBetaSynDistributed: number;
+    feedbackCount: number;
+    averageFeedbackRating: number;
+    activeGovernanceProposals: number;
+  };
+  recentEmailAccounts: EmailAccount[];
+  recentWallets: Array<{
+    walletAddress: string;
+    score: number;
+    eventsCount: number;
+    rewardsClaimed: number;
+    updatedAt: string;
+  }>;
+  recentFeedback: BetaFeedback[];
+};
+
+export function getAdminDashboard(token: string) {
+  return getJson<AdminDashboardResponse>("/admin/dashboard", token);
+}
+
 export type StakingResponse = {
   walletAddress: string;
   stakedBalance: string;
