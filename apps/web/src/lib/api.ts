@@ -329,22 +329,24 @@ export function getGovernanceProposals() {
 export function createGovernanceProposal(params: {
   title: string;
   description: string;
-  creatorWallet: string;
-}) {
-  return postJson<{ proposal: GovernanceProposal }>("/governance/proposals", params);
+}, token: string) {
+  return postJson<{ proposal: GovernanceProposal }>(
+    "/governance/proposals",
+    params,
+    token
+  );
 }
 
 export function voteGovernanceProposal(params: {
   proposalId: string;
-  walletAddress: string;
   choice: "FOR" | "AGAINST";
-}) {
+}, token: string) {
   return postJson<{ proposal: GovernanceProposal }>(
     `/governance/proposals/${params.proposalId}/vote`,
     {
-      walletAddress: params.walletAddress,
       choice: params.choice,
-    }
+    },
+    token
   );
 }
 

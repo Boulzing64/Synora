@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+import {
+  ProtocolNotice,
+  ProtocolSectionTitle,
+  ProtocolStat,
+} from "@/components/ProtocolUi";
 import { SynoraShell } from "@/components/SynoraShell";
-import { BASE_SEPOLIA_CHAIN_ID_HEX } from "@/lib/chain";
+import {
+  BASE_SEPOLIA_CHAIN_ID_HEX,
+  BASE_SEPOLIA_EXPLORER_URL,
+} from "@/lib/chain";
 import {
   approveSynForStaking,
   getStakingOnChainProfile,
@@ -14,47 +22,92 @@ import {
 import { getSynBalance } from "@/lib/synToken";
 
 type Locale = "fr" | "en";
+type TransactionKind = "approve" | "stake" | "unstake";
 
 const text = {
   fr: {
     title: "Staking",
     subtitle:
-      "Stake tes SYN pour preparer la reputation avancee et la future gouvernance SYNORA.",
-    connect: "Connecter wallet",
+      "Engage tes SYN pour renforcer ton poids de reputation et participer a la gouvernance.",
+    overview: "Position on-chain",
+    overviewTitle: "Ton capital utile dans SYNORA",
+    overviewDescription:
+      "Le staking donne du poids aux actions utiles sans bloquer la transparence du protocole.",
+    connect: "Connecter le wallet",
+    connected: "Wallet connecte",
     refresh: "Actualiser",
-    approve: "Approve SYN",
-    stake: "Stake",
-    unstake: "Unstake",
+    approve: "1. Autoriser",
+    stake: "2. Staker",
+    unstake: "Retirer",
     wallet: "Wallet",
-    balance: "Balance SYN",
-    staked: "SYN stakes",
-    totalStaked: "Total stake",
-    allowance: "Allowance staking",
-    amount: "Montant SYN",
-    statusReady: "Pret",
+    balance: "Disponible",
+    staked: "Ta position",
+    totalStaked: "Total protocole",
+    allowance: "Autorisation",
+    amount: "Montant en SYN",
+    actionEyebrow: "Console staking",
+    actionTitle: "Gerer ta position",
+    actionDescription:
+      "Autorise d'abord le contrat, puis stake le montant choisi. Tu gardes le controle de ton retrait.",
+    ready: "Pret a interagir sur Base Sepolia.",
     noWallet: "Connecte ton wallet pour utiliser le staking.",
-    loading: "Transaction en cours...",
+    loading: "Confirmation demandee dans ton wallet...",
     metamaskMissing: "MetaMask est introuvable.",
+    transactionSent: "Transaction envoyee",
+    viewTransaction: "Voir sur BaseScan",
+    approved: "Autorisation envoyee.",
+    stakedAction: "Staking envoye.",
+    unstakedAction: "Retrait envoye.",
+    stepApproval: "Autorisation",
+    stepApprovalText: "Permet au contrat de recevoir le montant choisi.",
+    stepStake: "Staking",
+    stepStakeText: "Active ton poids dans l'ecosysteme SYNORA.",
+    stepControl: "Controle",
+    stepControlText: "Retire tes SYN lorsque tu le souhaites.",
+    network: "Reseau",
+    networkValue: "Base Sepolia",
   },
   en: {
     title: "Staking",
     subtitle:
-      "Stake your SYN to prepare advanced reputation and future SYNORA governance.",
+      "Commit your SYN to strengthen your reputation weight and join governance.",
+    overview: "On-chain position",
+    overviewTitle: "Your useful capital in SYNORA",
+    overviewDescription:
+      "Staking gives weight to useful actions while keeping the protocol transparent.",
     connect: "Connect wallet",
+    connected: "Wallet connected",
     refresh: "Refresh",
-    approve: "Approve SYN",
-    stake: "Stake",
-    unstake: "Unstake",
+    approve: "1. Approve",
+    stake: "2. Stake",
+    unstake: "Withdraw",
     wallet: "Wallet",
-    balance: "SYN balance",
-    staked: "Staked SYN",
-    totalStaked: "Total staked",
-    allowance: "Staking allowance",
-    amount: "SYN amount",
-    statusReady: "Ready",
+    balance: "Available",
+    staked: "Your position",
+    totalStaked: "Protocol total",
+    allowance: "Allowance",
+    amount: "Amount in SYN",
+    actionEyebrow: "Staking console",
+    actionTitle: "Manage your position",
+    actionDescription:
+      "Approve the contract first, then stake the selected amount. You retain withdrawal control.",
+    ready: "Ready to interact on Base Sepolia.",
     noWallet: "Connect your wallet to use staking.",
-    loading: "Transaction pending...",
-    metamaskMissing: "MetaMask not found.",
+    loading: "Confirmation requested in your wallet...",
+    metamaskMissing: "MetaMask was not found.",
+    transactionSent: "Transaction sent",
+    viewTransaction: "View on BaseScan",
+    approved: "Approval submitted.",
+    stakedAction: "Stake submitted.",
+    unstakedAction: "Withdrawal submitted.",
+    stepApproval: "Approval",
+    stepApprovalText: "Allows the contract to receive the selected amount.",
+    stepStake: "Staking",
+    stepStakeText: "Activates your weight in the SYNORA ecosystem.",
+    stepControl: "Control",
+    stepControlText: "Withdraw your SYN whenever you choose.",
+    network: "Network",
+    networkValue: "Base Sepolia",
   },
 } as const;
 
@@ -72,13 +125,14 @@ export default function StakingPage() {
   const [allowance, setAllowance] = useState("0");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [transactionHash, setTransactionHash] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const savedLocale = window.localStorage.getItem("synora.locale");
 
     if (savedLocale === "fr" || savedLocale === "en") {
-      setLocale(savedLocale);
+      queueMicrotask(() => setLocale(savedLocale));
     }
 
     function onLocaleChange(event: Event) {
@@ -90,10 +144,7 @@ export default function StakingPage() {
     }
 
     window.addEventListener("synora-locale-change", onLocaleChange);
-
-    return () => {
-      window.removeEventListener("synora-locale-change", onLocaleChange);
-    };
+    return () => window.removeEventListener("synora-locale-change", onLocaleChange);
   }, []);
 
   async function switchToBaseSepolia() {
@@ -108,9 +159,7 @@ export default function StakingPage() {
   }
 
   async function refresh(wallet = walletAddress) {
-    if (!wallet) {
-      return;
-    }
+    if (!wallet) return;
 
     const [balanceResponse, stakingResponse, allowanceResponse] =
       await Promise.all([
@@ -132,27 +181,22 @@ export default function StakingPage() {
   async function connectWallet() {
     setError("");
     setStatus("");
+    setTransactionHash("");
 
     try {
-      if (!window.ethereum) {
-        throw new Error(text[locale].metamaskMissing);
-      }
-
+      if (!window.ethereum) throw new Error(text[locale].metamaskMissing);
       await switchToBaseSepolia();
 
       const accounts = (await window.ethereum.request({
         method: "eth_requestAccounts",
       })) as string[];
-
       const wallet = accounts[0];
 
-      if (!wallet) {
-        throw new Error("Wallet not found.");
-      }
+      if (!wallet) throw new Error("Wallet not found.");
 
       setWalletAddress(wallet);
       await refresh(wallet);
-      setStatus(text[locale].statusReady);
+      setStatus(text[locale].ready);
     } catch (caughtError) {
       setError(
         caughtError instanceof Error ? caughtError.message : "Unknown wallet error."
@@ -160,7 +204,7 @@ export default function StakingPage() {
     }
   }
 
-  async function approve() {
+  async function runTransaction(kind: TransactionKind) {
     if (!walletAddress) {
       setError(text[locale].noWallet);
       return;
@@ -168,165 +212,205 @@ export default function StakingPage() {
 
     setIsLoading(true);
     setError("");
+    setTransactionHash("");
 
     try {
       setStatus(text[locale].loading);
       await switchToBaseSepolia();
-      const hash = await approveSynForStaking({ walletAddress, amountSyn });
-      setStatus(`Approve tx: ${hash}`);
+
+      const hash =
+        kind === "approve"
+          ? await approveSynForStaking({ walletAddress, amountSyn })
+          : kind === "stake"
+            ? await stakeSyn({ walletAddress, amountSyn })
+            : await unstakeSyn({ walletAddress, amountSyn });
+
+      setTransactionHash(hash);
+      setStatus(
+        kind === "approve"
+          ? text[locale].approved
+          : kind === "stake"
+            ? text[locale].stakedAction
+            : text[locale].unstakedAction
+      );
       await refresh();
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Approve failed.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function stake() {
-    if (!walletAddress) {
-      setError(text[locale].noWallet);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      setStatus(text[locale].loading);
-      await switchToBaseSepolia();
-      const hash = await stakeSyn({ walletAddress, amountSyn });
-      setStatus(`Stake tx: ${hash}`);
-      await refresh();
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Stake failed.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function unstake() {
-    if (!walletAddress) {
-      setError(text[locale].noWallet);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      setStatus(text[locale].loading);
-      await switchToBaseSepolia();
-      const hash = await unstakeSyn({ walletAddress, amountSyn });
-      setStatus(`Unstake tx: ${hash}`);
-      await refresh();
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Unstake failed.");
+      setStatus("");
+      setError(
+        caughtError instanceof Error ? caughtError.message : "Transaction failed."
+      );
     } finally {
       setIsLoading(false);
     }
   }
 
   const t = text[locale];
+  const amountIsValid = Number(amountSyn) > 0;
 
   return (
     <SynoraShell title={t.title} subtitle={t.subtitle}>
-      <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">{t.wallet}</p>
-            <p className="mt-2 break-all font-mono text-sm">
-              {walletAddress ? formatWallet(walletAddress) : "-"}
-            </p>
+      <div className="grid gap-6">
+        <section className="premium-panel overflow-hidden rounded-[28px] p-5 sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <ProtocolSectionTitle
+              eyebrow={t.overview}
+              title={t.overviewTitle}
+              description={t.overviewDescription}
+            />
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={connectWallet}
+                disabled={isLoading}
+                className="rounded-2xl bg-cyan-300 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-200 disabled:opacity-50"
+              >
+                {walletAddress ? t.connected : t.connect}
+              </button>
+              <button
+                type="button"
+                onClick={() => refresh()}
+                disabled={isLoading || !walletAddress}
+                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-cyan-300/30 hover:bg-white/10 disabled:opacity-40"
+              >
+                {t.refresh}
+              </button>
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">{t.balance}</p>
-            <p className="mt-2 text-3xl font-bold">{synBalance}</p>
+          <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <ProtocolStat
+              label={t.wallet}
+              value={walletAddress ? formatWallet(walletAddress) : "-"}
+              detail={`${t.network}: ${t.networkValue}`}
+            />
+            <ProtocolStat
+              label={t.balance}
+              value={`${synBalance} SYN`}
+              detail={t.balance}
+              accent="violet"
+            />
+            <ProtocolStat
+              label={t.staked}
+              value={`${stakedBalance} SYN`}
+              detail={t.stepStakeText}
+              accent="emerald"
+            />
+            <ProtocolStat
+              label={t.totalStaked}
+              value={`${totalStaked} SYN`}
+              detail={`${t.allowance}: ${allowance} SYN`}
+              accent="amber"
+            />
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="premium-panel rounded-[28px] p-5 sm:p-7">
+            <ProtocolSectionTitle
+              eyebrow={t.actionEyebrow}
+              title={t.actionTitle}
+              description={t.actionDescription}
+            />
+
+            <label className="mt-7 block text-sm font-semibold text-slate-300">
+              {t.amount}
+              <div className="mt-2 flex rounded-2xl border border-white/10 bg-slate-950/70 p-1 focus-within:border-cyan-300/40">
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={amountSyn}
+                  onChange={(event) => setAmountSyn(event.target.value)}
+                  className="min-w-0 flex-1 bg-transparent px-4 py-3 text-xl font-bold text-white outline-none"
+                />
+                <span className="flex items-center rounded-xl bg-white/5 px-4 text-sm font-bold text-cyan-200">
+                  SYN
+                </span>
+              </div>
+            </label>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => runTransaction("approve")}
+                disabled={isLoading || !walletAddress || !amountIsValid}
+                className="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-3 font-bold text-cyan-100 transition hover:bg-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t.approve}
+              </button>
+              <button
+                type="button"
+                onClick={() => runTransaction("stake")}
+                disabled={isLoading || !walletAddress || !amountIsValid}
+                className="rounded-2xl bg-emerald-300 px-4 py-3 font-bold text-slate-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t.stake}
+              </button>
+              <button
+                type="button"
+                onClick={() => runTransaction("unstake")}
+                disabled={isLoading || !walletAddress || !amountIsValid}
+                className="rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 font-bold text-amber-100 transition hover:bg-amber-300/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t.unstake}
+              </button>
+            </div>
+
+            {status ? (
+              <div className="mt-5">
+                <ProtocolNotice
+                  title={transactionHash ? t.transactionSent : undefined}
+                  tone="cyan"
+                >
+                  <p>{status}</p>
+                  {transactionHash ? (
+                    <a
+                      href={`${BASE_SEPOLIA_EXPLORER_URL}/tx/${transactionHash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex font-bold text-white underline decoration-cyan-300/50 underline-offset-4"
+                    >
+                      {t.viewTransaction}
+                    </a>
+                  ) : null}
+                </ProtocolNotice>
+              </div>
+            ) : null}
+
+            {error ? (
+              <div className="mt-5">
+                <ProtocolNotice tone="red">{error}</ProtocolNotice>
+              </div>
+            ) : null}
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">{t.staked}</p>
-            <p className="mt-2 text-3xl font-bold">{stakedBalance}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
-            <p className="text-sm text-slate-400">{t.totalStaked}</p>
-            <p className="mt-2 text-3xl font-bold">{totalStaked}</p>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950 p-5">
-          <p className="text-sm text-slate-400">{t.allowance}</p>
-          <p className="mt-2 text-xl font-bold">{allowance} SYN</p>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 md:flex-row">
-          <input
-            value={amountSyn}
-            onChange={(event) => setAmountSyn(event.target.value)}
-            placeholder={t.amount}
-            className="min-w-0 flex-1 rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-400"
-          />
-
-          <button
-            type="button"
-            onClick={connectWallet}
-            disabled={isLoading}
-            className="rounded-2xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-60"
-          >
-            {t.connect}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => refresh()}
-            disabled={isLoading || !walletAddress}
-            className="rounded-2xl border border-slate-700 px-5 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-60"
-          >
-            {t.refresh}
-          </button>
-        </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <button
-            type="button"
-            onClick={approve}
-            disabled={isLoading || !walletAddress}
-            className="rounded-2xl border border-cyan-500 px-5 py-3 font-bold text-cyan-200 transition hover:bg-cyan-950 disabled:opacity-60"
-          >
-            {t.approve}
-          </button>
-
-          <button
-            type="button"
-            onClick={stake}
-            disabled={isLoading || !walletAddress}
-            className="rounded-2xl border border-emerald-500 px-5 py-3 font-bold text-emerald-200 transition hover:bg-emerald-950 disabled:opacity-60"
-          >
-            {t.stake}
-          </button>
-
-          <button
-            type="button"
-            onClick={unstake}
-            disabled={isLoading || !walletAddress}
-            className="rounded-2xl border border-orange-500 px-5 py-3 font-bold text-orange-200 transition hover:bg-orange-950 disabled:opacity-60"
-          >
-            {t.unstake}
-          </button>
-        </div>
-
-        {status ? (
-          <div className="mt-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/30 p-4 text-sm text-cyan-100">
-            {status}
-          </div>
-        ) : null}
-
-        {error ? (
-          <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-200">
-            {error}
-          </div>
-        ) : null}
+          <aside className="premium-panel rounded-[28px] p-5 sm:p-7">
+            <ProtocolSectionTitle
+              eyebrow="Workflow"
+              title="3 actions, controle total"
+            />
+            <div className="mt-6 space-y-4">
+              {[
+                [t.stepApproval, t.stepApprovalText, "01"],
+                [t.stepStake, t.stepStakeText, "02"],
+                [t.stepControl, t.stepControlText, "03"],
+              ].map(([label, detail, number]) => (
+                <div
+                  key={label}
+                  className="premium-card flex gap-4 rounded-2xl p-4"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-300/10 font-mono text-xs font-bold text-cyan-200">
+                    {number}
+                  </span>
+                  <div>
+                    <p className="font-bold text-white">{label}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-400">{detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </section>
       </div>
     </SynoraShell>
   );
