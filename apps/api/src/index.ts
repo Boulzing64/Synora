@@ -1,6 +1,7 @@
 import { config } from "dotenv";
 
 import { createSynoraApp } from "./app.js";
+import { initializeBetaStorage } from "./beta/repository.js";
 import { logger } from "./observability/logger.js";
 import { initializeRewardsStorage } from "./rewards/repository.js";
 import { initializeDatabase } from "./storage/repositories.js";
@@ -11,6 +12,7 @@ const apiPort = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 
 await initializeDatabase();
 await initializeRewardsStorage();
+await initializeBetaStorage();
 
 const app = createSynoraApp();
 

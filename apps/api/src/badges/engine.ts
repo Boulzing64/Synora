@@ -7,7 +7,7 @@ export type SynoraBadge = {
   unlocked: boolean;
 };
 
-export function buildBadges(events: ReputationEvent[]) {
+export function buildBadges(events: ReputationEvent[], foundingBetaTester = false) {
   const eventTypes = new Set(events.map((event) => event.type));
   const rewardsClaimed = events.filter((event) => event.type === "REWARD_CLAIMED").length;
 
@@ -32,6 +32,12 @@ export function buildBadges(events: ReputationEvent[]) {
       label: "Early Adopter",
       description: "Joined SYNORA during the MVP beta phase.",
       unlocked: eventTypes.has("PROFILE_CREATED") || events.length > 0,
+    },
+    {
+      id: "founding_beta_tester",
+      label: "Founding Beta Tester",
+      description: "Claimed the founding beta allocation on Base Sepolia.",
+      unlocked: foundingBetaTester,
     },
     {
       id: "syn_connected",

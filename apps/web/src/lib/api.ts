@@ -163,6 +163,41 @@ export type RewardAuthorizationResponse = {
 export function requestRewardAuthorization(token: string) {
   return postJson<RewardAuthorizationResponse>("/rewards/authorize", {}, token);
 }
+
+export type BetaDistribution = {
+  walletAddress: string;
+  rewardId: string;
+  amount: number;
+  status: "AUTHORIZED" | "CLAIMED";
+  transactionHash: string | null;
+  createdAt: string;
+  claimedAt: string | null;
+};
+
+export type BetaStatusResponse = {
+  walletAddress: string;
+  eligible: boolean;
+  distribution: BetaDistribution | null;
+};
+
+export function getBetaStatus(token: string) {
+  return getJson<BetaStatusResponse>("/beta/status", token);
+}
+
+export function requestBetaAuthorization(token: string) {
+  return postJson<{
+    distribution: BetaDistribution;
+    authorization: RewardAuthorization;
+  }>("/beta/authorize", {}, token);
+}
+
+export function confirmBetaClaim(token: string, transactionHash: string) {
+  return postJson<{ distribution: BetaDistribution }>(
+    "/beta/confirm",
+    { transactionHash },
+    token
+  );
+}
 export type LeaderboardEntry = {
   walletAddress: string;
   score: number;
@@ -220,6 +255,9 @@ export type AnalyticsSummary = {
   totalRewardClaims: number;
   uniqueRewardClaimers: number;
   averageRewardsPerUser: number;
+  totalBetaRegistrations: number;
+  totalBetaTesters: number;
+  totalBetaSynDistributed: number;
   totalGovernanceProposals: number;
   activeGovernanceProposals: number;
   closedGovernanceProposals: number;

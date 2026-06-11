@@ -7,13 +7,30 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { getAddress, isAddress, verifyMessage } from "viem";
+import {
+  createPublicClient,
+  decodeEventLog,
+  formatUnits,
+  getAddress,
+  http,
+  isAddress,
+  parseUnits,
+  verifyMessage,
+} from "viem";
 import { z } from "zod";
 import { buildAuthMessage } from "./auth/messages.js";
+import {
+  getBetaAnalytics,
+  getBetaDistribution,
+  getOrCreateBetaDistribution,
+  markBetaDistributionClaimed,
+} from "./beta/repository.js";
 import { logger } from "./observability/logger.js";
 import { buildReputationProfile } from "./reputation/engine.js";
-import { createRewardAuthorization } from "./rewards/authorization.js";
-import { createPublicClient, formatUnits, http } from "viem";
+import {
+  createDailyMvpRewardId,
+  createRewardAuthorization,
+} from "./rewards/authorization.js";
 import {
   canClaimMvpReward,
   createMvpRewardClaim,
@@ -54,6 +71,18 @@ export function createSynoraApp() {
       stateMutability: "view",
       inputs: [],
       outputs: [{ name: "", type: "uint256" }],
+    },
+  ] as const;
+
+  const rewardClaimedEventAbi = [
+    {
+      type: "event",
+      name: "RewardClaimed",
+      inputs: [
+        { name: "rewardId", type: "bytes32", indexed: true },
+        { name: "wallet", type: "address", indexed: true },
+        { name: "amount", type: "uint256", indexed: false },
+      ],
     },
   ] as const;
 
@@ -368,10 +397,11 @@ export function createSynoraApp() {
       });
     }
 
-    const schema = z.object({
-      type: z.enum(["DASHBOARD_VISITED", "SYN_BALANCE_CONNECTED", "REWARD_CLAIMED"]),
-      value: z.number().min(0).max(100).optional(),
-    });
+    const schema = z
+      .object({
+        type: z.enum(["DASHBOARD_VISITED", "SYN_BALANCE_CONNECTED"]),
+      })
+      .strict();
 
     const parsed = schema.safeParse(request.body);
 
@@ -383,7 +413,6 @@ export function createSynoraApp() {
 
     const events = await addWalletEvent(authenticatedWallet, {
       type: parsed.data.type,
-      value: parsed.data.value,
       createdAt: new Date().toISOString(),
     });
 
@@ -421,6 +450,177 @@ export function createSynoraApp() {
     });
   });
 
+  app.get("/beta/status", async (request, response) => {
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const distribution = await getBetaDistribution(authenticatedWallet);
+
+    return response.json({
+      walletAddress: authenticatedWallet,
+      eligible: !distribution || distribution.status !== "CLAIMED",
+      distribution,
+    });
+  });
+
+  app.post("/beta/authorize", rewardClaimRateLimit, async (request, response) => {
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const distribution = await getOrCreateBetaDistribution(authenticatedWallet);
+
+    if (distribution.status === "CLAIMED") {
+      return response.status(409).json({
+        error: "BETA_REWARD_ALREADY_CLAIMED",
+        distribution,
+      });
+    }
+
+    try {
+      const authorization = await createRewardAuthorization({
+        rewardId: distribution.rewardId,
+        walletAddress: authenticatedWallet,
+        amountSyn: distribution.amount,
+      });
+
+      return response.json({
+        distribution,
+        authorization,
+      });
+    } catch (error) {
+      logger.error("beta.authorization.failed", {
+        walletAddress: authenticatedWallet,
+        message: error instanceof Error ? error.message : "UNKNOWN_ERROR",
+      });
+
+      return response.status(503).json({
+        error: "BETA_AUTHORIZATION_NOT_CONFIGURED",
+      });
+    }
+  });
+
+  app.post("/beta/confirm", rewardClaimRateLimit, async (request, response) => {
+    const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!authenticatedWallet) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const parsed = z
+      .object({
+        transactionHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+      })
+      .strict()
+      .safeParse(request.body);
+
+    if (!parsed.success) {
+      return response.status(400).json({
+        error: "INVALID_TRANSACTION_HASH",
+      });
+    }
+
+    const distribution = await getBetaDistribution(authenticatedWallet);
+
+    if (!distribution) {
+      return response.status(404).json({
+        error: "BETA_AUTHORIZATION_NOT_FOUND",
+      });
+    }
+
+    if (distribution.status === "CLAIMED") {
+      return response.json({
+        distribution,
+      });
+    }
+
+    const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL;
+    const distributorAddress = process.env.REWARDS_DISTRIBUTOR_ADDRESS;
+
+    if (!rpcUrl || !distributorAddress || !isAddress(distributorAddress)) {
+      return response.status(503).json({
+        error: "BETA_CONFIRMATION_NOT_CONFIGURED",
+      });
+    }
+
+    try {
+      const publicClient = createPublicClient({
+        transport: http(rpcUrl),
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: parsed.data.transactionHash as `0x${string}`,
+        timeout: 60_000,
+      });
+
+      if (receipt.status !== "success") {
+        return response.status(409).json({
+          error: "BETA_TRANSACTION_FAILED",
+        });
+      }
+
+      const expectedAmount = parseUnits(String(distribution.amount), 18);
+      const normalizedDistributor = getAddress(distributorAddress);
+      const matchingLog = receipt.logs.find((log) => {
+        if (getAddress(log.address) !== normalizedDistributor) {
+          return false;
+        }
+
+        try {
+          const decoded = decodeEventLog({
+            abi: rewardClaimedEventAbi,
+            data: log.data,
+            topics: log.topics,
+          });
+
+          return (
+            decoded.eventName === "RewardClaimed" &&
+            decoded.args.rewardId.toLowerCase() === distribution.rewardId.toLowerCase() &&
+            getAddress(decoded.args.wallet) === authenticatedWallet &&
+            decoded.args.amount === expectedAmount
+          );
+        } catch {
+          return false;
+        }
+      });
+
+      if (!matchingLog) {
+        return response.status(409).json({
+          error: "BETA_CLAIM_EVENT_NOT_FOUND",
+        });
+      }
+
+      const claimedDistribution = await markBetaDistributionClaimed(
+        authenticatedWallet,
+        parsed.data.transactionHash
+      );
+
+      return response.json({
+        distribution: claimedDistribution,
+      });
+    } catch (error) {
+      logger.warn("beta.confirmation.failed", {
+        walletAddress: authenticatedWallet,
+        transactionHash: parsed.data.transactionHash,
+        message: error instanceof Error ? error.message : "UNKNOWN_ERROR",
+      });
+
+      return response.status(409).json({
+        error: "BETA_TRANSACTION_NOT_CONFIRMED",
+      });
+    }
+  });
+
   app.post("/rewards/authorize", rewardClaimRateLimit, async (request, response) => {
     const authenticatedWallet = getAuthenticatedWallet(request.headers.authorization);
 
@@ -450,8 +650,7 @@ export function createSynoraApp() {
       });
     }
 
-    const rewardId = crypto.randomBytes(32).toString("hex");
-    const normalizedRewardId = `0x${rewardId}`;
+    const normalizedRewardId = createDailyMvpRewardId(authenticatedWallet);
 
     try {
       const authorization = await createRewardAuthorization({
@@ -570,7 +769,11 @@ export function createSynoraApp() {
 
     const walletAddress = getAddress(walletAddressParam);
     const events = await getWalletEvents(walletAddress);
-    const badgesProfile = buildBadges(events);
+    const betaDistribution = await getBetaDistribution(walletAddress);
+    const badgesProfile = buildBadges(
+      events,
+      betaDistribution?.status === "CLAIMED"
+    );
 
     return response.json({
       walletAddress,
@@ -600,6 +803,7 @@ export function createSynoraApp() {
 
   app.get("/analytics", async (_request, response) => {
     const analytics = await getAnalytics();
+    const betaAnalytics = await getBetaAnalytics();
 
     let totalStakedSyn = "0";
     let stakingStatus = "NOT_CONFIGURED";
@@ -643,6 +847,7 @@ export function createSynoraApp() {
     return response.json({
       analytics: {
         ...analytics,
+        ...betaAnalytics,
         stakingContractAddress: stakingAddress ?? null,
         totalStakedSyn,
         stakingStatus,

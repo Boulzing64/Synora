@@ -26,9 +26,9 @@ const text = {
     betaText:
       "Chaque beta-testeur recevra 100 SYN de test pour essayer le staking, les rewards et la gouvernance DAO.",
     betaButton: "Commencer avec le dashboard",
-    betaStatSyn: "{t.betaStatSyn}",
-    betaStatDao: "{t.betaStatDao}",
-    betaStatStaking: "{t.betaStatStaking}",
+    betaStatSyn: "Offerts sur le testnet",
+    betaStatDao: "Votes et gouvernance",
+    betaStatStaking: "Poids de vote",
   },
 
   en: {
@@ -49,9 +49,9 @@ const text = {
     betaText:
       "Each beta tester will receive 100 test SYN to try staking, rewards and DAO governance.",
     betaButton: "Start with the dashboard",
-    betaStatSyn: "t.betaStatSyn",
-    betaStatDao: "t.betaStatDao",
-    betaStatStaking: "t.betaStatStaking",
+    betaStatSyn: "Granted on testnet",
+    betaStatDao: "Voting and governance",
+    betaStatStaking: "Voting power",
   },
 } as const;
 
@@ -124,22 +124,22 @@ export default function Home() {
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-3xl font-bold text-cyan-300">100 SYN</p>
-            <p className="mt-2 text-sm text-slate-400">Offerts en testnet</p>
+            <p className="mt-2 text-sm text-slate-400">{t.betaStatSyn}</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-3xl font-bold text-cyan-300">DAO</p>
-            <p className="mt-2 text-sm text-slate-400">Votes et gouvernance</p>
+            <p className="mt-2 text-sm text-slate-400">{t.betaStatDao}</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
             <p className="text-3xl font-bold text-cyan-300">Staking</p>
-            <p className="mt-2 text-sm text-slate-400">Poids de vote</p>
+            <p className="mt-2 text-sm text-slate-400">{t.betaStatStaking}</p>
           </div>
         </div>
 
         <Link
-          href="/dashboard"
+          href="/obtenir-syn"
           className="mt-6 inline-flex rounded-2xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300"
         >
           {t.betaButton}

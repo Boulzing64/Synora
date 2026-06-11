@@ -1,5 +1,5 @@
 import { privateKeyToAccount } from "viem/accounts";
-import { getAddress, isAddress, parseUnits } from "viem";
+import { getAddress, isAddress, keccak256, parseUnits, stringToHex } from "viem";
 
 export type RewardAuthorization = {
   rewardId: string;
@@ -17,6 +17,19 @@ const rewardAuthorizationTypes = {
     { name: "amount", type: "uint256" },
   ],
 } as const;
+
+export function createDailyMvpRewardId(walletAddress: string, date = new Date()) {
+  const normalizedWallet = getAddress(walletAddress);
+  const utcDay = date.toISOString().slice(0, 10);
+
+  return keccak256(stringToHex(`SYNORA:MVP_REWARD:${normalizedWallet}:${utcDay}`));
+}
+
+export function createBetaRewardId(walletAddress: string) {
+  const normalizedWallet = getAddress(walletAddress);
+
+  return keccak256(stringToHex(`SYNORA:FOUNDING_BETA:${normalizedWallet}`));
+}
 
 export async function createRewardAuthorization(params: {
   rewardId: string;

@@ -3,6 +3,7 @@ import request from "supertest";
 import { privateKeyToAccount } from "viem/accounts";
 
 import { createSynoraApp } from "../app.js";
+import { initializeBetaStorage } from "../beta/repository.js";
 import { initializeRewardsStorage } from "../rewards/repository.js";
 import { initializeDatabase } from "../storage/repositories.js";
 
@@ -18,6 +19,7 @@ const app = createSynoraApp();
 
 await initializeDatabase();
 await initializeRewardsStorage();
+await initializeBetaStorage();
 
 const account = privateKeyToAccount(
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
@@ -81,6 +83,60 @@ const reputationEventResponse = await request(app)
 assert.equal(reputationEventResponse.body.reputation.walletAddress, account.address);
 assert.ok(reputationEventResponse.body.reputation.score >= verifyResponse.body.user.score);
 
+const betaAuthorizationResponse = await request(app)
+  .post("/beta/authorize")
+  .set("Authorization", `Bearer ${token}`)
+  .send({})
+  .expect(200);
+
+assert.equal(betaAuthorizationResponse.body.distribution.walletAddress, account.address);
+assert.equal(betaAuthorizationResponse.body.distribution.amount, 100);
+assert.equal(betaAuthorizationResponse.body.distribution.status, "AUTHORIZED");
+
+const repeatedBetaAuthorizationResponse = await request(app)
+  .post("/beta/authorize")
+  .set("Authorization", `Bearer ${token}`)
+  .send({})
+  .expect(200);
+
+assert.equal(
+  repeatedBetaAuthorizationResponse.body.authorization.rewardId,
+  betaAuthorizationResponse.body.authorization.rewardId
+);
+
+const betaStatusResponse = await request(app)
+  .get("/beta/status")
+  .set("Authorization", `Bearer ${token}`)
+  .expect(200);
+
+assert.equal(betaStatusResponse.body.distribution.amount, 100);
+assert.equal(betaStatusResponse.body.eligible, true);
+
+await request(app)
+  .post("/beta/confirm")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    transactionHash: "invalid",
+  })
+  .expect(400);
+
+await request(app)
+  .post("/reputation/event")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    type: "REWARD_CLAIMED",
+  })
+  .expect(400);
+
+await request(app)
+  .post("/reputation/event")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    type: "DASHBOARD_VISITED",
+    value: 100,
+  })
+  .expect(400);
+
 const reputationResponse = await request(app)
   .get(`/reputation/${account.address}`)
   .expect(200);
@@ -105,6 +161,17 @@ const rewardAuthorizationResponse = await request(app)
 assert.equal(rewardAuthorizationResponse.body.authorization.walletAddress, account.address);
 assert.equal(rewardAuthorizationResponse.body.authorization.chainId, 84532);
 assert.match(rewardAuthorizationResponse.body.authorization.signature, /^0x[a-fA-F0-9]+$/);
+
+const repeatedRewardAuthorizationResponse = await request(app)
+  .post("/rewards/authorize")
+  .set("Authorization", `Bearer ${token}`)
+  .send({})
+  .expect(200);
+
+assert.equal(
+  repeatedRewardAuthorizationResponse.body.authorization.rewardId,
+  rewardAuthorizationResponse.body.authorization.rewardId
+);
 
 const dedicatedRewardClaimResponse = await request(app)
   .post("/rewards/claim")
@@ -164,6 +231,12 @@ const badgesResponse = await request(app)
 assert.equal(badgesResponse.body.walletAddress, account.address);
 assert.ok(Array.isArray(badgesResponse.body.badges));
 assert.ok(badgesResponse.body.badges.length > 0);
+assert.equal(
+  badgesResponse.body.badges.find(
+    (badge: { id: string; unlocked: boolean }) => badge.id === "founding_beta_tester"
+  )?.unlocked,
+  false
+);
 
 const analyticsResponse = await request(app)
   .get("/analytics")
@@ -174,6 +247,9 @@ assert.ok(typeof analyticsResponse.body.analytics.totalEvents === "number");
 assert.ok(typeof analyticsResponse.body.analytics.totalRewardsClaimed === "number");
 assert.ok(typeof analyticsResponse.body.analytics.topScore === "number");
 assert.ok(typeof analyticsResponse.body.analytics.totalSynDistributed === "number");
+assert.equal(analyticsResponse.body.analytics.totalBetaRegistrations, 1);
+assert.equal(analyticsResponse.body.analytics.totalBetaTesters, 0);
+assert.equal(analyticsResponse.body.analytics.totalBetaSynDistributed, 0);
 
 const stakingResponse = await request(app)
   .get(`/staking/${account.address}`)

@@ -21,3 +21,7 @@ Thumbs.db
 scripts/set-base-sepolia-env.ps1
 
 contracts/scripts/synora-constructor-args.ts
+
+# Android release signing secrets
+android/keystore.properties
+android/*.jks

@@ -19,6 +19,7 @@ const navigation = [
   { href: "/leaderboard", labelFr: "Classement", labelEn: "Leaderboard" },
   { href: "/badges", labelFr: "Badges", labelEn: "Badges" },
   { href: "/rewards", labelFr: "Rewards", labelEn: "Rewards" },
+  { href: "/obtenir-syn", labelFr: "Obtenir SYN", labelEn: "Get SYN" },
   { href: "/reputation", labelFr: "Reputation", labelEn: "Reputation" },
   { href: "/analytics", labelFr: "Analytics", labelEn: "Analytics" },
   { href: "/staking", labelFr: "Staking", labelEn: "Staking" },

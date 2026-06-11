@@ -19,6 +19,9 @@ const text = {
     rewardClaims: "Claims rewards",
     uniqueClaimers: "Claimers uniques",
     averageRewards: "Rewards / utilisateur",
+    betaRegistrations: "Inscriptions beta",
+    betaTesters: "Beta-testeurs confirmes",
+    betaSynDistributed: "SYN beta distribues",
     loading: "Chargement des analytics...",
     error: "Impossible de charger les analytics.",
     totalStaked: "Total SYN stake",
@@ -43,6 +46,9 @@ const text = {
     rewardClaims: "Reward claims",
     uniqueClaimers: "Unique claimers",
     averageRewards: "Rewards / user",
+    betaRegistrations: "Beta registrations",
+    betaTesters: "Confirmed beta testers",
+    betaSynDistributed: "Beta SYN distributed",
     loading: "Loading analytics...",
     error: "Unable to load analytics.",
     totalStaked: "Total staked SYN",
@@ -172,6 +178,21 @@ export default function AnalyticsPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 md:col-span-2">
             <p className="text-sm text-slate-400">{t.synDistributed}</p>
             <p className="mt-2 text-4xl font-bold">{analytics.totalSynDistributed} SYN</p>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-400/40 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.betaRegistrations}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalBetaRegistrations}</p>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-400/40 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.betaTesters}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalBetaTesters}</p>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-400/40 bg-slate-900 p-6">
+            <p className="text-sm text-slate-400">{t.betaSynDistributed}</p>
+            <p className="mt-2 text-4xl font-bold">{analytics.totalBetaSynDistributed} SYN</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
