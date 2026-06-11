@@ -11,7 +11,8 @@
         "test:reputation": "tsx src/reputation/engine.test.ts",
         "db:migrate": "tsx src/db/migrate.ts",
         "test:api": "tsx src/tests/api.test.ts",
-        "test:rewards-auth": "tsx src/rewards/authorization.test.ts"
+        "test:rewards-auth": "tsx src/rewards/authorization.test.ts",
+        "test:notifications": "tsx src/notifications/service.test.ts"
     },
     "devDependencies": {
         "@types/cors": "^2.8.19",

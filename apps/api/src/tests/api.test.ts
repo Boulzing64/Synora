@@ -72,6 +72,22 @@ assert.ok(verifyResponse.body.user.score > 0);
 
 const token = verifyResponse.body.token as string;
 
+await request(app).get("/notifications").expect(401);
+
+const initialNotificationsResponse = await request(app)
+  .get("/notifications")
+  .set("Authorization", `Bearer ${token}`)
+  .expect(200);
+
+assert.equal(initialNotificationsResponse.body.walletAddress, account.address);
+assert.ok(Array.isArray(initialNotificationsResponse.body.notifications));
+assert.ok(
+  initialNotificationsResponse.body.notifications.some(
+    (notification: { kind: string }) =>
+      notification.kind === "REPUTATION_EVENT"
+  )
+);
+
 await request(app)
   .post("/reputation/event")
   .send({

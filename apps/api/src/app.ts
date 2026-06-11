@@ -27,6 +27,7 @@ import {
   markBetaDistributionClaimed,
 } from "./beta/repository.js";
 import { logger } from "./observability/logger.js";
+import { buildNotifications } from "./notifications/service.js";
 import { buildReputationProfile } from "./reputation/engine.js";
 import {
   createDailyMvpRewardId,
@@ -470,6 +471,41 @@ export function createSynoraApp() {
         (!distribution && program.registrationOpen),
       distribution,
       program,
+    });
+  });
+
+  app.get("/notifications", async (request, response) => {
+    const walletAddress = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!walletAddress) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const [events, rewardClaims, proposals, betaDistribution, claimEligibility] =
+      await Promise.all([
+        getWalletEvents(walletAddress),
+        getRecentRewardClaims(walletAddress),
+        listGovernanceProposals(),
+        getBetaDistribution(walletAddress),
+        canClaimMvpReward(walletAddress),
+      ]);
+    const profile = buildReputationProfile({
+      walletAddress,
+      events,
+    });
+
+    return response.json({
+      walletAddress,
+      notifications: buildNotifications({
+        betaDistribution,
+        claimAllowed: claimEligibility.allowed,
+        events,
+        profile,
+        proposals,
+        rewardClaims,
+      }),
     });
   });
 

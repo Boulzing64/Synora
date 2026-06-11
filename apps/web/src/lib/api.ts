@@ -112,6 +112,31 @@ export function getAuthenticatedUser(token: string) {
   return getJson<AuthMeResponse>("/auth/me", token);
 }
 
+export type SynoraNotificationKind =
+  | "BETA_TRANSACTION_CONFIRMED"
+  | "BETA_REWARD_READY"
+  | "REWARD_AVAILABLE"
+  | "REWARD_CLAIMED"
+  | "REPUTATION_EVENT"
+  | "GOVERNANCE_PROPOSAL";
+
+export type SynoraNotification = {
+  id: string;
+  kind: SynoraNotificationKind;
+  createdAt: string;
+  href: string;
+  data: Record<string, string | number>;
+};
+
+export type NotificationsResponse = {
+  walletAddress: string;
+  notifications: SynoraNotification[];
+};
+
+export function getNotifications(token: string) {
+  return getJson<NotificationsResponse>("/notifications", token);
+}
+
 export function reportReputationEvent(
   params: {
     type: ReputationEventType;

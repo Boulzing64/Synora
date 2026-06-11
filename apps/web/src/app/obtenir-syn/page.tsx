@@ -102,6 +102,7 @@ export default function GetSynPage() {
       setStatus("Verification de la transaction sur Base Sepolia...");
       const confirmation = await confirmBetaClaim(token, transactionHash);
       setDistribution(confirmation.distribution);
+      window.dispatchEvent(new Event("synora-notifications-refresh"));
       setStatus("Bienvenue parmi les Founding Beta Testers SYNORA.");
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Le claim beta a echoue.";

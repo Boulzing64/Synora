@@ -123,6 +123,7 @@ export function WalletAuthCard() {
         setStatus("Session restauree");
       } catch {
         window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        window.dispatchEvent(new Event("synora-auth-change"));
 
         if (isMounted) {
           setStatus("Wallet non connecte");
@@ -337,6 +338,7 @@ export function WalletAuthCard() {
 
       setAuthToken(verifyResponse.token);
       window.localStorage.setItem(SESSION_STORAGE_KEY, verifyResponse.token);
+      window.dispatchEvent(new Event("synora-auth-change"));
 
       setUser(verifyResponse.user);
       setReputation(verifyResponse.reputation);
@@ -414,6 +416,7 @@ export function WalletAuthCard() {
       setStatus("Claim recompense MVP...");
 
       const rewardResponse = await claimSynoraReward(authToken);
+      window.dispatchEvent(new Event("synora-notifications-refresh"));
 
       applyReputationProfile(rewardResponse.reputation);
       await refreshEvents(walletAddress);
@@ -468,6 +471,7 @@ export function WalletAuthCard() {
     setWalletAddress("");
     setAuthToken("");
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    window.dispatchEvent(new Event("synora-auth-change"));
     setUser(null);
     setReputation(null);
     setEvents([]);

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { HelpWidget } from "@/components/HelpWidget";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 type SynoraShellProps = {
   title: string;
@@ -218,6 +219,8 @@ export function SynoraShell({
               >
                 {locale === "en" ? "Join beta" : "Rejoindre la beta"}
               </Link>
+
+              <NotificationCenter locale={locale} />
 
               <div className="flex rounded-xl border border-white/[0.08] bg-white/[0.03] p-1">
                 {(["fr", "en"] as const).map((language) => (
