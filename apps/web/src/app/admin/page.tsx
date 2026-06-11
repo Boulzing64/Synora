@@ -26,6 +26,18 @@ function conversionRate(value: number, base: number) {
   return base > 0 ? Math.round((value / base) * 100) : 0;
 }
 
+function sourceLabel(source: string, isFrench: boolean) {
+  const labels: Record<string, [string, string]> = {
+    direct: ["Acces direct", "Direct"],
+    founder: ["Fondateur", "Founder"],
+    community: ["Communaute", "Community"],
+    social: ["Reseaux sociaux", "Social"],
+    partner: ["Partenaire", "Partner"],
+  };
+
+  return labels[source]?.[isFrench ? 0 : 1] ?? source;
+}
+
 export default function AdminPage() {
   const [locale, setLocale] = useState<Locale>("fr");
   const [dashboard, setDashboard] = useState<AdminDashboardResponse | null>(null);
@@ -228,7 +240,7 @@ export default function AdminPage() {
               <ProtocolStat
                 label={isFrench ? "Beta inscrits" : "Beta signups"}
                 value={dashboard.funnel.betaRegistrations}
-                detail="/ 100"
+                detail={`/ ${dashboard.overview.betaMaxTesters}`}
               />
               <ProtocolStat
                 label={isFrench ? "Beta confirmes" : "Beta confirmed"}
@@ -239,6 +251,84 @@ export default function AdminPage() {
                 )}%`}
                 accent="emerald"
               />
+            </div>
+          </section>
+
+          <section className="premium-panel rounded-[28px] p-5 sm:p-7">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <ProtocolSectionTitle
+                eyebrow="Acquisition"
+                title={
+                  isFrench
+                    ? "Canaux de recrutement"
+                    : "Recruitment channels"
+                }
+                description={
+                  isFrench
+                    ? "Les inscriptions sont attribuees au premier lien utilise avant le claim beta."
+                    : "Registrations are attributed to the first link used before the beta claim."
+                }
+              />
+              <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.04] px-4 py-3 text-sm text-cyan-100">
+                <strong>{dashboard.overview.betaRemainingPlaces}</strong>{" "}
+                {isFrench ? "places restantes" : "spots remaining"}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              {dashboard.acquisitionSources.length === 0 ? (
+                <p className="col-span-full rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
+                  {isFrench
+                    ? "Aucune source mesuree pour le moment."
+                    : "No measured source yet."}
+                </p>
+              ) : (
+                dashboard.acquisitionSources.map((source) => (
+                  <div
+                    key={source.source}
+                    className="premium-card rounded-2xl p-5"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-200">
+                      {sourceLabel(source.source, isFrench)}
+                    </p>
+                    <p className="mt-4 text-3xl font-black text-white">
+                      {source.registrations}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {isFrench ? "inscriptions" : "registrations"}
+                    </p>
+                    <div className="mt-4 flex items-center justify-between text-xs">
+                      <span className="text-slate-500">
+                        {isFrench ? "Claims" : "Claims"}
+                      </span>
+                      <span className="font-bold text-emerald-200">
+                        {source.claimed} (
+                        {conversionRate(source.claimed, source.registrations)}%)
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {[
+                ["founder", "/beta?source=founder"],
+                ["social", "/beta?source=social"],
+                ["partner", "/beta?source=partner"],
+              ].map(([source, href]) => (
+                <div
+                  key={source}
+                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4"
+                >
+                  <p className="text-xs font-bold text-slate-300">
+                    {sourceLabel(source, isFrench)}
+                  </p>
+                  <p className="mt-2 break-all font-mono text-[11px] text-slate-500">
+                    {href}
+                  </p>
+                </div>
+              ))}
             </div>
           </section>
 

@@ -199,15 +199,25 @@ const reputationEventResponse = await request(app)
 assert.equal(reputationEventResponse.body.reputation.walletAddress, account.address);
 assert.ok(reputationEventResponse.body.reputation.score >= verifyResponse.body.user.score);
 
+await request(app)
+  .post("/beta/authorize")
+  .set("Authorization", `Bearer ${token}`)
+  .send({ source: "unknown-channel" })
+  .expect(400)
+  .expect((response) => {
+    assert.equal(response.body.error, "INVALID_BETA_SOURCE");
+  });
+
 const betaAuthorizationResponse = await request(app)
   .post("/beta/authorize")
   .set("Authorization", `Bearer ${token}`)
-  .send({})
+  .send({ source: "founder" })
   .expect(200);
 
 assert.equal(betaAuthorizationResponse.body.distribution.walletAddress, account.address);
 assert.equal(betaAuthorizationResponse.body.distribution.amount, 100);
 assert.equal(betaAuthorizationResponse.body.distribution.status, "AUTHORIZED");
+assert.equal(betaAuthorizationResponse.body.distribution.source, "founder");
 assert.equal(betaAuthorizationResponse.body.program.remainingPlaces, 0);
 assert.equal(betaAuthorizationResponse.body.program.registrationOpen, false);
 
@@ -268,6 +278,15 @@ assert.ok(
   typeof adminDashboardResponse.body.funnel.authenticatedWallets === "number"
 );
 assert.ok(Array.isArray(adminDashboardResponse.body.recentFeedback));
+assert.equal(adminDashboardResponse.body.overview.betaMaxTesters, 1);
+assert.equal(adminDashboardResponse.body.overview.betaRemainingPlaces, 0);
+assert.deepEqual(adminDashboardResponse.body.acquisitionSources, [
+  {
+    source: "founder",
+    registrations: 1,
+    claimed: 0,
+  },
+]);
 
 await request(app)
   .post("/beta/authorize")

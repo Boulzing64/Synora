@@ -14,6 +14,7 @@ export type BetaDistribution = {
   rewardId: string;
   amount: number;
   status: BetaDistributionStatus;
+  source: string;
   transactionHash: string | null;
   createdAt: string;
   claimedAt: string | null;
@@ -58,6 +59,7 @@ function mapRow(row: any): BetaDistribution {
     rewardId: String(row.reward_id),
     amount: Number(row.amount),
     status: row.status as BetaDistributionStatus,
+    source: String(row.source ?? "direct"),
     transactionHash: row.transaction_hash ? String(row.transaction_hash) : null,
     createdAt: new Date(row.created_at).toISOString(),
     claimedAt: row.claimed_at ? new Date(row.claimed_at).toISOString() : null,
@@ -117,6 +119,36 @@ export async function initializeBetaStorage() {
     }
   }
 
+  const sourceMigration = await databasePool.query(
+    `SELECT version FROM schema_migrations WHERE version = $1 LIMIT 1`,
+    ["011"]
+  );
+
+  if (sourceMigration.rows.length === 0) {
+    const client = await databasePool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(`
+        ALTER TABLE beta_distributions
+          ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'direct';
+
+        CREATE INDEX IF NOT EXISTS idx_beta_distributions_source
+          ON beta_distributions(source);
+      `);
+      await client.query(
+        `INSERT INTO schema_migrations(version, name) VALUES ($1, $2)`,
+        ["011", "add_beta_acquisition_source"]
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   logger.info("beta.storage.initialized", { provider: "postgresql" });
 }
 
@@ -130,7 +162,7 @@ export async function getBetaDistribution(walletAddress: string) {
 
   const result = await databasePool.query(
     `
-      SELECT wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
+      SELECT wallet_address, reward_id, amount, status, source, transaction_hash, created_at, claimed_at
       FROM beta_distributions
       WHERE wallet_address = $1
       LIMIT 1
@@ -141,7 +173,10 @@ export async function getBetaDistribution(walletAddress: string) {
   return result.rows[0] ? mapRow(result.rows[0]) : null;
 }
 
-export async function getOrCreateBetaDistribution(walletAddress: string) {
+export async function getOrCreateBetaDistribution(
+  walletAddress: string,
+  source = "direct"
+) {
   const normalizedWallet = getAddress(walletAddress);
   const databasePool = getPool();
 
@@ -156,7 +191,7 @@ export async function getOrCreateBetaDistribution(walletAddress: string) {
       throw new Error("BETA_PROGRAM_FULL");
     }
 
-    const distribution = createBetaDistribution(normalizedWallet);
+    const distribution = createBetaDistribution(normalizedWallet, source);
     memoryDistributions.set(normalizedWallet, distribution);
     return distribution;
   }
@@ -169,7 +204,7 @@ export async function getOrCreateBetaDistribution(walletAddress: string) {
 
     const existingResult = await client.query(
       `
-        SELECT wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
+        SELECT wallet_address, reward_id, amount, status, source, transaction_hash, created_at, claimed_at
         FROM beta_distributions
         WHERE wallet_address = $1
         LIMIT 1
@@ -191,18 +226,19 @@ export async function getOrCreateBetaDistribution(walletAddress: string) {
       throw new Error("BETA_PROGRAM_FULL");
     }
 
-    const distribution = createBetaDistribution(normalizedWallet);
+    const distribution = createBetaDistribution(normalizedWallet, source);
     const insertResult = await client.query(
       `
-        INSERT INTO beta_distributions(wallet_address, reward_id, amount, status, created_at)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
+        INSERT INTO beta_distributions(wallet_address, reward_id, amount, status, source, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING wallet_address, reward_id, amount, status, source, transaction_hash, created_at, claimed_at
       `,
       [
         distribution.walletAddress,
         distribution.rewardId,
         distribution.amount,
         distribution.status,
+        distribution.source,
         distribution.createdAt,
       ]
     );
@@ -222,12 +258,16 @@ export async function getOrCreateBetaDistribution(walletAddress: string) {
   }
 }
 
-function createBetaDistribution(walletAddress: string): BetaDistribution {
+function createBetaDistribution(
+  walletAddress: string,
+  source: string
+): BetaDistribution {
   return {
     walletAddress,
     rewardId: createBetaRewardId(walletAddress),
     amount: BETA_AMOUNT_SYN,
     status: "AUTHORIZED",
+    source,
     transactionHash: null,
     createdAt: new Date().toISOString(),
     claimedAt: null,
@@ -265,7 +305,7 @@ export async function markBetaDistributionClaimed(
       UPDATE beta_distributions
       SET status = 'CLAIMED', transaction_hash = $2, claimed_at = $3
       WHERE wallet_address = $1
-      RETURNING wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
+      RETURNING wallet_address, reward_id, amount, status, source, transaction_hash, created_at, claimed_at
     `,
     [normalizedWallet, transactionHash, claimedAt]
   );
@@ -305,6 +345,44 @@ export async function getBetaAnalytics() {
     totalBetaTesters: Number(row.total_beta_testers ?? 0),
     totalBetaSynDistributed: Number(row.total_beta_syn_distributed ?? 0),
   };
+}
+
+export async function getBetaAcquisitionSources() {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    const grouped = new Map<string, { registrations: number; claimed: number }>();
+
+    for (const distribution of memoryDistributions.values()) {
+      const current = grouped.get(distribution.source) ?? {
+        registrations: 0,
+        claimed: 0,
+      };
+      current.registrations += 1;
+      current.claimed += distribution.status === "CLAIMED" ? 1 : 0;
+      grouped.set(distribution.source, current);
+    }
+
+    return Array.from(grouped.entries())
+      .map(([source, totals]) => ({ source, ...totals }))
+      .sort((a, b) => b.registrations - a.registrations);
+  }
+
+  const result = await databasePool.query(`
+    SELECT
+      source,
+      COUNT(*)::INTEGER AS registrations,
+      COUNT(*) FILTER (WHERE status = 'CLAIMED')::INTEGER AS claimed
+    FROM beta_distributions
+    GROUP BY source
+    ORDER BY registrations DESC, source ASC
+  `);
+
+  return result.rows.map((row) => ({
+    source: String(row.source),
+    registrations: Number(row.registrations),
+    claimed: Number(row.claimed),
+  }));
 }
 
 export async function getBetaProgramStatus() {

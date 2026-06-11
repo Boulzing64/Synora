@@ -194,7 +194,7 @@ export default function Home() {
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/obtenir-syn"
+                href="/beta"
                 className="inline-flex items-center justify-center rounded-2xl bg-cyan-300 px-6 py-3.5 text-sm font-black text-[#03101b] shadow-[0_14px_45px_rgba(67,217,255,0.18)] transition hover:-translate-y-0.5 hover:bg-cyan-200"
               >
                 {t.primaryCta}
@@ -284,7 +284,7 @@ export default function Home() {
               <p className="mt-2 text-sm text-slate-500">100 SYN testnet par wallet confirme</p>
             </div>
             <Link
-              href="/obtenir-syn"
+              href="/beta"
               className="rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-5 py-3 text-center text-sm font-bold text-cyan-200 transition hover:bg-cyan-400/10"
             >
               {t.primaryCta}
@@ -363,7 +363,7 @@ export default function Home() {
           {t.finalText}
         </p>
         <Link
-          href="/obtenir-syn"
+          href="/beta"
           className="relative mt-8 inline-flex rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 transition hover:-translate-y-0.5"
         >
           {t.finalCta}

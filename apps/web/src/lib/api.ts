@@ -259,6 +259,7 @@ export type BetaDistribution = {
   rewardId: string;
   amount: number;
   status: "AUTHORIZED" | "CLAIMED";
+  source: string;
   transactionHash: string | null;
   createdAt: string;
   claimedAt: string | null;
@@ -288,12 +289,22 @@ export function getBetaProgram() {
   return getJson<{ program: BetaProgramStatus }>("/beta/program");
 }
 
-export function requestBetaAuthorization(token: string) {
+export type BetaAcquisitionSource =
+  | "direct"
+  | "founder"
+  | "community"
+  | "social"
+  | "partner";
+
+export function requestBetaAuthorization(
+  token: string,
+  source: BetaAcquisitionSource = "direct"
+) {
   return postJson<{
     distribution: BetaDistribution;
     authorization: RewardAuthorization;
     program: BetaProgramStatus;
-  }>("/beta/authorize", {}, token);
+  }>("/beta/authorize", { source }, token);
 }
 
 export function confirmBetaClaim(token: string, transactionHash: string) {
@@ -398,6 +409,8 @@ export type AdminDashboardResponse = {
     totalWallets: number;
     totalEvents: number;
     totalBetaSynDistributed: number;
+    betaMaxTesters: number;
+    betaRemainingPlaces: number;
     feedbackCount: number;
     averageFeedbackRating: number;
     activeGovernanceProposals: number;
@@ -411,6 +424,11 @@ export type AdminDashboardResponse = {
     updatedAt: string;
   }>;
   recentFeedback: BetaFeedback[];
+  acquisitionSources: Array<{
+    source: string;
+    registrations: number;
+    claimed: number;
+  }>;
 };
 
 export function getAdminDashboard(token: string) {

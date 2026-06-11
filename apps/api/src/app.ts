@@ -21,6 +21,7 @@ import { z } from "zod";
 import { buildAuthMessage } from "./auth/messages.js";
 import { sendMagicLinkEmail } from "./auth/email.js";
 import {
+  getBetaAcquisitionSources,
   getBetaAnalytics,
   getBetaDistribution,
   getBetaProgramStatus,
@@ -789,10 +790,28 @@ export function createSynoraApp() {
       });
     }
 
+    const parsed = z
+      .object({
+        source: z
+          .enum(["direct", "founder", "community", "social", "partner"])
+          .optional(),
+      })
+      .strict()
+      .safeParse(request.body);
+
+    if (!parsed.success) {
+      return response.status(400).json({
+        error: "INVALID_BETA_SOURCE",
+      });
+    }
+
     let distribution;
 
     try {
-      distribution = await getOrCreateBetaDistribution(authenticatedWallet);
+      distribution = await getOrCreateBetaDistribution(
+        authenticatedWallet,
+        parsed.data.source ?? "direct"
+      );
     } catch (error) {
       if (error instanceof Error && error.message === "BETA_PROGRAM_FULL") {
         return response.status(409).json({
@@ -1203,10 +1222,11 @@ export function createSynoraApp() {
       });
     }
 
-    const [operations, analytics, beta] = await Promise.all([
+    const [operations, analytics, beta, acquisitionSources] = await Promise.all([
       getAdminOperationsData(),
       getAnalytics(),
-      getBetaAnalytics(),
+      getBetaProgramStatus(),
+      getBetaAcquisitionSources(),
     ]);
 
     logger.info("admin.dashboard.viewed", { walletAddress });
@@ -1229,6 +1249,8 @@ export function createSynoraApp() {
         totalWallets: analytics.totalWallets,
         totalEvents: analytics.totalEvents,
         totalBetaSynDistributed: beta.totalBetaSynDistributed,
+        betaMaxTesters: beta.maxTesters,
+        betaRemainingPlaces: beta.remainingPlaces,
         feedbackCount: operations.feedbackCount,
         averageFeedbackRating: operations.averageFeedbackRating,
         activeGovernanceProposals: analytics.activeGovernanceProposals,
@@ -1236,6 +1258,7 @@ export function createSynoraApp() {
       recentEmailAccounts: operations.recentEmailAccounts,
       recentWallets: operations.recentWallets,
       recentFeedback: operations.recentFeedback,
+      acquisitionSources,
     });
   });
 

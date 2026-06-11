@@ -20,6 +20,7 @@ type Locale = "fr" | "en";
 
 const primaryNavigation = [
   { href: "/", labelFr: "Accueil", labelEn: "Home", icon: "home" },
+  { href: "/beta", labelFr: "Rejoindre la beta", labelEn: "Join beta", icon: "users" },
   { href: "/dashboard", labelFr: "Dashboard", labelEn: "Dashboard", icon: "grid" },
   { href: "/obtenir-syn", labelFr: "Obtenir SYN", labelEn: "Get SYN", icon: "spark" },
   { href: "/download", labelFr: "Installer l'app", labelEn: "Install app", icon: "download" },
@@ -48,6 +49,7 @@ type IconName =
 function NavIcon({ name }: { name: IconName }) {
   const paths: Record<IconName, React.ReactNode> = {
     home: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
     grid: <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></>,
     spark: <><path d="m12 3 1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z" /><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" /></>,
     download: <><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></>,
@@ -236,7 +238,7 @@ export function SynoraShell({
               </Link>
 
               <Link
-                href="/obtenir-syn"
+                href="/beta"
                 className="hidden rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-2 text-xs font-bold text-cyan-200 transition hover:bg-cyan-400/10 sm:block"
               >
                 {locale === "en" ? "Join beta" : "Rejoindre la beta"}

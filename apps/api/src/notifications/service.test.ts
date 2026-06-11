@@ -9,6 +9,7 @@ const notifications = buildNotifications({
       "0x0000000000000000000000000000000000000000000000000000000000000001",
     amount: 100,
     status: "CLAIMED",
+    source: "direct",
     transactionHash:
       "0x0000000000000000000000000000000000000000000000000000000000000002",
     createdAt: "2026-06-10T10:00:00.000Z",

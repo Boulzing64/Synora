@@ -8,6 +8,7 @@ import {
   getBetaProgram,
   getBetaStatus,
   requestBetaAuthorization,
+  type BetaAcquisitionSource,
   type BetaDistribution,
   type BetaProgramStatus,
 } from "@/lib/api";
@@ -15,6 +16,18 @@ import { BASE_SEPOLIA_CHAIN_ID_HEX } from "@/lib/chain";
 import { claimRewardOnChain } from "@/lib/rewardsDistributor";
 
 const SESSION_STORAGE_KEY = "synora.authToken";
+const BETA_SOURCE_KEY = "synora.betaSource";
+
+function getBetaSource(): BetaAcquisitionSource {
+  const source = window.localStorage.getItem(BETA_SOURCE_KEY);
+
+  return source === "founder" ||
+    source === "community" ||
+    source === "social" ||
+    source === "partner"
+    ? source
+    : "direct";
+}
 
 export default function GetSynPage() {
   const [distribution, setDistribution] = useState<BetaDistribution | null>(null);
@@ -73,7 +86,7 @@ export default function GetSynPage() {
 
     try {
       setStatus("Preparation de ton autorisation unique...");
-      const response = await requestBetaAuthorization(token);
+      const response = await requestBetaAuthorization(token, getBetaSource());
       setProgram(response.program);
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
