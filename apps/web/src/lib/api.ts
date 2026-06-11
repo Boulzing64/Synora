@@ -174,20 +174,35 @@ export type BetaDistribution = {
   claimedAt: string | null;
 };
 
+export type BetaProgramStatus = {
+  maxTesters: number;
+  remainingPlaces: number;
+  registrationOpen: boolean;
+  totalBetaRegistrations: number;
+  totalBetaTesters: number;
+  totalBetaSynDistributed: number;
+};
+
 export type BetaStatusResponse = {
   walletAddress: string;
   eligible: boolean;
   distribution: BetaDistribution | null;
+  program: BetaProgramStatus;
 };
 
 export function getBetaStatus(token: string) {
   return getJson<BetaStatusResponse>("/beta/status", token);
 }
 
+export function getBetaProgram() {
+  return getJson<{ program: BetaProgramStatus }>("/beta/program");
+}
+
 export function requestBetaAuthorization(token: string) {
   return postJson<{
     distribution: BetaDistribution;
     authorization: RewardAuthorization;
+    program: BetaProgramStatus;
   }>("/beta/authorize", {}, token);
 }
 

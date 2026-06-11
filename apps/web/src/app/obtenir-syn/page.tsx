@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { SynoraShell } from "@/components/SynoraShell";
 import {
   confirmBetaClaim,
+  getBetaProgram,
   getBetaStatus,
   requestBetaAuthorization,
   type BetaDistribution,
+  type BetaProgramStatus,
 } from "@/lib/api";
 import { BASE_SEPOLIA_CHAIN_ID_HEX } from "@/lib/chain";
 import { claimRewardOnChain } from "@/lib/rewardsDistributor";
@@ -16,12 +18,21 @@ const SESSION_STORAGE_KEY = "synora.authToken";
 
 export default function GetSynPage() {
   const [distribution, setDistribution] = useState<BetaDistribution | null>(null);
+  const [program, setProgram] = useState<BetaProgramStatus | null>(null);
   const [status, setStatus] = useState("Connecte et authentifie ton wallet depuis le dashboard.");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const token = window.localStorage.getItem(SESSION_STORAGE_KEY);
+
+    getBetaProgram()
+      .then((response) => {
+        setProgram(response.program);
+      })
+      .catch(() => {
+        setError("Impossible de charger le compteur de la beta.");
+      });
 
     if (!token) {
       return;
@@ -30,10 +41,13 @@ export default function GetSynPage() {
     getBetaStatus(token)
       .then((response) => {
         setDistribution(response.distribution);
+        setProgram(response.program);
         setStatus(
           response.distribution?.status === "CLAIMED"
             ? "Tes 100 SYN de test ont deja ete reclames."
-            : "Ton wallet est eligible au programme beta."
+            : response.eligible
+              ? "Ton wallet est eligible au programme beta."
+              : "La cohorte des 100 beta-testeurs est complete."
         );
       })
       .catch(() => {
@@ -60,6 +74,7 @@ export default function GetSynPage() {
     try {
       setStatus("Preparation de ton autorisation unique...");
       const response = await requestBetaAuthorization(token);
+      setProgram(response.program);
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: BASE_SEPOLIA_CHAIN_ID_HEX }],
@@ -89,8 +104,21 @@ export default function GetSynPage() {
       setDistribution(confirmation.distribution);
       setStatus("Bienvenue parmi les Founding Beta Testers SYNORA.");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Le claim beta a echoue.");
-      setStatus("Le claim n'a pas ete finalise.");
+      const message = caughtError instanceof Error ? caughtError.message : "Le claim beta a echoue.";
+
+      if (message === "BETA_PROGRAM_FULL") {
+        const refreshedProgram = await getBetaProgram().catch(() => null);
+
+        if (refreshedProgram) {
+          setProgram(refreshedProgram.program);
+        }
+
+        setError("Les 100 places de la beta ont ete attribuees.");
+        setStatus("Les inscriptions sont fermees.");
+      } else {
+        setError(message);
+        setStatus("Le claim n'a pas ete finalise.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +136,18 @@ export default function GetSynPage() {
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950 p-5">
+          <p className="text-sm text-slate-400">Places Founding Beta Tester</p>
+          <p className="mt-2 text-3xl font-bold text-cyan-300">
+            {program ? `${program.remainingPlaces} / ${program.maxTesters}` : "..."}
+          </p>
+          <p className="mt-1 text-sm text-slate-400">
+            {program?.registrationOpen
+              ? "Inscriptions ouvertes"
+              : "Inscriptions fermees"}
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950 p-5">
           <p className="text-sm text-slate-400">Statut</p>
           <p className="mt-2 font-semibold">{status}</p>
 
@@ -120,7 +160,11 @@ export default function GetSynPage() {
 
         <button
           type="button"
-          disabled={isLoading || distribution?.status === "CLAIMED"}
+          disabled={
+            isLoading ||
+            distribution?.status === "CLAIMED" ||
+            (!distribution && program?.registrationOpen === false)
+          }
           onClick={claimBetaTokens}
           className="mt-6 rounded-2xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
         >

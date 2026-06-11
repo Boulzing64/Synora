@@ -13,6 +13,7 @@ process.env.REWARDS_SIGNER_PRIVATE_KEY =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 process.env.REWARDS_DISTRIBUTOR_ADDRESS = "0x0000000000000000000000000000000000000001";
 process.env.REWARDS_CHAIN_ID = "84532";
+process.env.BETA_MAX_TESTERS = "1";
 delete process.env.DATABASE_URL;
 
 const app = createSynoraApp();
@@ -29,6 +30,12 @@ const healthResponse = await request(app).get("/health").expect(200);
 
 assert.equal(healthResponse.body.status, "ok");
 assert.equal(healthResponse.body.service, "synora-api");
+
+const initialBetaProgramResponse = await request(app).get("/beta/program").expect(200);
+
+assert.equal(initialBetaProgramResponse.body.program.maxTesters, 1);
+assert.equal(initialBetaProgramResponse.body.program.remainingPlaces, 1);
+assert.equal(initialBetaProgramResponse.body.program.registrationOpen, true);
 
 await request(app)
   .post("/auth/nonce")
@@ -92,6 +99,8 @@ const betaAuthorizationResponse = await request(app)
 assert.equal(betaAuthorizationResponse.body.distribution.walletAddress, account.address);
 assert.equal(betaAuthorizationResponse.body.distribution.amount, 100);
 assert.equal(betaAuthorizationResponse.body.distribution.status, "AUTHORIZED");
+assert.equal(betaAuthorizationResponse.body.program.remainingPlaces, 0);
+assert.equal(betaAuthorizationResponse.body.program.registrationOpen, false);
 
 const repeatedBetaAuthorizationResponse = await request(app)
   .post("/beta/authorize")
@@ -111,6 +120,37 @@ const betaStatusResponse = await request(app)
 
 assert.equal(betaStatusResponse.body.distribution.amount, 100);
 assert.equal(betaStatusResponse.body.eligible, true);
+assert.equal(betaStatusResponse.body.program.remainingPlaces, 0);
+
+const secondAccount = privateKeyToAccount(
+  "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+);
+const secondNonceResponse = await request(app)
+  .post("/auth/nonce")
+  .send({
+    walletAddress: secondAccount.address,
+  })
+  .expect(200);
+const secondSignature = await secondAccount.signMessage({
+  message: secondNonceResponse.body.message,
+});
+const secondVerifyResponse = await request(app)
+  .post("/auth/verify")
+  .send({
+    walletAddress: secondAccount.address,
+    signature: secondSignature,
+  })
+  .expect(200);
+
+await request(app)
+  .post("/beta/authorize")
+  .set("Authorization", `Bearer ${secondVerifyResponse.body.token}`)
+  .send({})
+  .expect(409)
+  .expect((response) => {
+    assert.equal(response.body.error, "BETA_PROGRAM_FULL");
+    assert.equal(response.body.program.remainingPlaces, 0);
+  });
 
 await request(app)
   .post("/beta/confirm")

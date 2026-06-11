@@ -2,7 +2,8 @@
 
 ## Objectif
 
-Attribuer 100 SYN de test sur Base Sepolia une seule fois par wallet authentifie.
+Attribuer 100 SYN de test sur Base Sepolia une seule fois par wallet authentifie, dans la limite
+de 100 wallets.
 
 ## Parcours
 
@@ -23,6 +24,7 @@ La migration `008_create_beta_distributions` est appliquee automatiquement au de
 - `REWARDS_SIGNER_PRIVATE_KEY`
 - `REWARDS_DISTRIBUTOR_ADDRESS`
 - `REWARDS_CHAIN_ID=84532`
+- `BETA_MAX_TESTERS=100`
 
 ## Variables requises sur Vercel
 
@@ -40,6 +42,7 @@ en conservant une reserve pour les rewards MVP de 10 SYN.
 
 - JWT lie au wallet authentifie
 - une ligne PostgreSQL unique par wallet
+- fermeture atomique apres 100 inscriptions
 - un `rewardId` deterministe unique par wallet
 - anti-double claim du contrat
 - verification du receipt et de l'evenement on-chain

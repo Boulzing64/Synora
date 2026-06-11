@@ -22,6 +22,7 @@ import { buildAuthMessage } from "./auth/messages.js";
 import {
   getBetaAnalytics,
   getBetaDistribution,
+  getBetaProgramStatus,
   getOrCreateBetaDistribution,
   markBetaDistributionClaimed,
 } from "./beta/repository.js";
@@ -460,11 +461,21 @@ export function createSynoraApp() {
     }
 
     const distribution = await getBetaDistribution(authenticatedWallet);
+    const program = await getBetaProgramStatus();
 
     return response.json({
       walletAddress: authenticatedWallet,
-      eligible: !distribution || distribution.status !== "CLAIMED",
+      eligible:
+        distribution?.status === "AUTHORIZED" ||
+        (!distribution && program.registrationOpen),
       distribution,
+      program,
+    });
+  });
+
+  app.get("/beta/program", async (_request, response) => {
+    return response.json({
+      program: await getBetaProgramStatus(),
     });
   });
 
@@ -477,7 +488,20 @@ export function createSynoraApp() {
       });
     }
 
-    const distribution = await getOrCreateBetaDistribution(authenticatedWallet);
+    let distribution;
+
+    try {
+      distribution = await getOrCreateBetaDistribution(authenticatedWallet);
+    } catch (error) {
+      if (error instanceof Error && error.message === "BETA_PROGRAM_FULL") {
+        return response.status(409).json({
+          error: "BETA_PROGRAM_FULL",
+          program: await getBetaProgramStatus(),
+        });
+      }
+
+      throw error;
+    }
 
     if (distribution.status === "CLAIMED") {
       return response.status(409).json({
@@ -496,6 +520,7 @@ export function createSynoraApp() {
       return response.json({
         distribution,
         authorization,
+        program: await getBetaProgramStatus(),
       });
     } catch (error) {
       logger.error("beta.authorization.failed", {

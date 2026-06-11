@@ -16,3 +16,5 @@ services:
         sync: false
       - key: REWARDS_CHAIN_ID
         value: 84532
+      - key: BETA_MAX_TESTERS
+        value: 100

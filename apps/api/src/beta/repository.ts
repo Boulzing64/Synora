@@ -44,6 +44,14 @@ function getPool() {
   return pool;
 }
 
+export function getBetaMaxTesters() {
+  const configuredLimit = Number(process.env.BETA_MAX_TESTERS ?? 100);
+
+  return Number.isInteger(configuredLimit) && configuredLimit > 0
+    ? configuredLimit
+    : 100;
+}
+
 function mapRow(row: any): BetaDistribution {
   return {
     walletAddress: String(row.wallet_address),
@@ -135,46 +143,95 @@ export async function getBetaDistribution(walletAddress: string) {
 
 export async function getOrCreateBetaDistribution(walletAddress: string) {
   const normalizedWallet = getAddress(walletAddress);
-  const existing = await getBetaDistribution(normalizedWallet);
+  const databasePool = getPool();
 
-  if (existing) {
-    return existing;
+  if (!databasePool) {
+    const existing = memoryDistributions.get(normalizedWallet);
+
+    if (existing) {
+      return existing;
+    }
+
+    if (memoryDistributions.size >= getBetaMaxTesters()) {
+      throw new Error("BETA_PROGRAM_FULL");
+    }
+
+    const distribution = createBetaDistribution(normalizedWallet);
+    memoryDistributions.set(normalizedWallet, distribution);
+    return distribution;
   }
 
-  const distribution: BetaDistribution = {
-    walletAddress: normalizedWallet,
-    rewardId: createBetaRewardId(normalizedWallet),
+  const client = await databasePool.connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock($1)", [845320100]);
+
+    const existingResult = await client.query(
+      `
+        SELECT wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
+        FROM beta_distributions
+        WHERE wallet_address = $1
+        LIMIT 1
+      `,
+      [normalizedWallet]
+    );
+
+    if (existingResult.rows[0]) {
+      await client.query("COMMIT");
+      return mapRow(existingResult.rows[0]);
+    }
+
+    const countResult = await client.query(
+      `SELECT COUNT(*)::INTEGER AS total FROM beta_distributions`
+    );
+
+    if (Number(countResult.rows[0]?.total ?? 0) >= getBetaMaxTesters()) {
+      await client.query("ROLLBACK");
+      throw new Error("BETA_PROGRAM_FULL");
+    }
+
+    const distribution = createBetaDistribution(normalizedWallet);
+    const insertResult = await client.query(
+      `
+        INSERT INTO beta_distributions(wallet_address, reward_id, amount, status, created_at)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
+      `,
+      [
+        distribution.walletAddress,
+        distribution.rewardId,
+        distribution.amount,
+        distribution.status,
+        distribution.createdAt,
+      ]
+    );
+
+    await client.query("COMMIT");
+    return mapRow(insertResult.rows[0]);
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // The transaction may already be closed.
+    }
+
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function createBetaDistribution(walletAddress: string): BetaDistribution {
+  return {
+    walletAddress,
+    rewardId: createBetaRewardId(walletAddress),
     amount: BETA_AMOUNT_SYN,
     status: "AUTHORIZED",
     transactionHash: null,
     createdAt: new Date().toISOString(),
     claimedAt: null,
   };
-
-  const databasePool = getPool();
-
-  if (!databasePool) {
-    memoryDistributions.set(normalizedWallet, distribution);
-    return distribution;
-  }
-
-  const result = await databasePool.query(
-    `
-      INSERT INTO beta_distributions(wallet_address, reward_id, amount, status, created_at)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (wallet_address) DO UPDATE SET wallet_address = EXCLUDED.wallet_address
-      RETURNING wallet_address, reward_id, amount, status, transaction_hash, created_at, claimed_at
-    `,
-    [
-      distribution.walletAddress,
-      distribution.rewardId,
-      distribution.amount,
-      distribution.status,
-      distribution.createdAt,
-    ]
-  );
-
-  return mapRow(result.rows[0]);
 }
 
 export async function markBetaDistributionClaimed(
@@ -247,5 +304,21 @@ export async function getBetaAnalytics() {
     totalBetaRegistrations: Number(row.total_beta_registrations ?? 0),
     totalBetaTesters: Number(row.total_beta_testers ?? 0),
     totalBetaSynDistributed: Number(row.total_beta_syn_distributed ?? 0),
+  };
+}
+
+export async function getBetaProgramStatus() {
+  const analytics = await getBetaAnalytics();
+  const maxTesters = getBetaMaxTesters();
+  const remainingPlaces = Math.max(
+    maxTesters - analytics.totalBetaRegistrations,
+    0
+  );
+
+  return {
+    ...analytics,
+    maxTesters,
+    remainingPlaces,
+    registrationOpen: remainingPlaces > 0,
   };
 }
