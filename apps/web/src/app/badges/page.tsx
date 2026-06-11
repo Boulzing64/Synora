@@ -42,7 +42,7 @@ export default function BadgesPage() {
     const savedLocale = window.localStorage.getItem("synora.locale");
 
     if (savedLocale === "fr" || savedLocale === "en") {
-      setLocale(savedLocale);
+      queueMicrotask(() => setLocale(savedLocale));
     }
 
     function onLocaleChange(event: Event) {

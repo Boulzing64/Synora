@@ -22,6 +22,7 @@ const primaryNavigation = [
   { href: "/", labelFr: "Accueil", labelEn: "Home", icon: "home" },
   { href: "/dashboard", labelFr: "Dashboard", labelEn: "Dashboard", icon: "grid" },
   { href: "/obtenir-syn", labelFr: "Obtenir SYN", labelEn: "Get SYN", icon: "spark" },
+  { href: "/download", labelFr: "Installer l'app", labelEn: "Install app", icon: "download" },
 ] as const;
 
 const ecosystemNavigation = [
@@ -49,6 +50,7 @@ function NavIcon({ name }: { name: IconName }) {
     home: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></>,
     grid: <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></>,
     spark: <><path d="m12 3 1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z" /><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" /></>,
+    download: <><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></>,
     score: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
     gift: <><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12h18M7.5 8C5 8 5 4 7.5 4 10 4 12 8 12 8M16.5 8C19 8 19 4 16.5 4 14 4 12 8 12 8" /></>,
     layers: <><path d="m12 3 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5M3 16l9 5 9-5" /></>,
@@ -208,7 +210,17 @@ export function SynoraShell({
               className="mr-3 grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-slate-300 lg:hidden"
               aria-label="Open navigation"
             >
-              <span className="text-xl">≡</span>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
             </button>
 
             <Link href="/" className="flex items-center gap-2 lg:hidden">
@@ -230,7 +242,7 @@ export function SynoraShell({
                 {locale === "en" ? "Join beta" : "Rejoindre la beta"}
               </Link>
 
-              <InstallPwaButton compact />
+              <InstallPwaButton compact locale={locale} />
 
               <NotificationCenter locale={locale} />
 

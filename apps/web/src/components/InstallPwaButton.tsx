@@ -10,8 +10,10 @@ type BeforeInstallPromptEvent = Event & {
 
 export function InstallPwaButton({
   compact = false,
+  locale = "fr",
 }: {
   compact?: boolean;
+  locale?: "fr" | "en";
 }) {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -78,13 +80,41 @@ export function InstallPwaButton({
       <button
         type="button"
         onClick={install}
+        aria-label={
+          locale === "en" ? "Install the SYNORA app" : "Installer l'application SYNORA"
+        }
+        title={locale === "en" ? "Install the app" : "Installer l'app"}
         className={
           compact
-            ? "hidden rounded-xl border border-violet-300/20 bg-violet-300/[0.06] px-4 py-2 text-xs font-bold text-violet-100 transition hover:bg-violet-300/10 sm:block"
+            ? "grid h-10 w-10 place-items-center rounded-xl border border-violet-300/20 bg-violet-300/[0.06] text-violet-100 transition hover:bg-violet-300/10 sm:flex sm:h-auto sm:w-auto sm:gap-2 sm:px-4 sm:py-2"
             : "w-full rounded-2xl bg-cyan-300 px-5 py-3.5 text-sm font-black text-slate-950 transition hover:bg-cyan-200"
         }
       >
-        {compact ? "Installer l'app" : "Installer SYNORA"}
+        {compact ? (
+          <>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 3v12" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M5 20h14" />
+            </svg>
+            <span className="hidden sm:inline">
+              {locale === "en" ? "Install app" : "Installer l'app"}
+            </span>
+          </>
+        ) : locale === "en" ? (
+          "Install SYNORA"
+        ) : (
+          "Installer SYNORA"
+        )}
       </button>
 
       {showInstructions ? (
