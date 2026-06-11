@@ -26,6 +26,9 @@ const text = {
     betaText:
       "Chaque beta-testeur recevra 100 SYN de test pour essayer le staking, les rewards et la gouvernance DAO.",
     betaButton: "Commencer avec le dashboard",
+    betaStatSyn: "{t.betaStatSyn}",
+    betaStatDao: "{t.betaStatDao}",
+    betaStatStaking: "{t.betaStatStaking}",
   },
 
   en: {
@@ -46,6 +49,9 @@ const text = {
     betaText:
       "Each beta tester will receive 100 test SYN to try staking, rewards and DAO governance.",
     betaButton: "Start with the dashboard",
+    betaStatSyn: "t.betaStatSyn",
+    betaStatDao: "t.betaStatDao",
+    betaStatStaking: "t.betaStatStaking",
   },
 } as const;
 
