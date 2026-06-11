@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { OnboardingJourney } from "@/components/OnboardingJourney";
 import {
   claimSynoraReward,
   getAuthenticatedUser,
@@ -482,7 +483,18 @@ export function WalletAuthCard() {
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.45fr_0.75fr]">
+    <div className="space-y-5">
+      <OnboardingJourney
+        locale={locale}
+        walletAddress={walletAddress}
+        authToken={authToken}
+        score={score}
+        events={events}
+        onConnect={connectAndAuthenticate}
+        isLoading={isLoading}
+      />
+
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_0.75fr]">
       <div className="space-y-5">
         <section className="premium-panel overflow-hidden rounded-[28px] p-5 sm:p-7">
           <div className="flex flex-col gap-7 lg:flex-row lg:items-center">
@@ -697,6 +709,7 @@ export function WalletAuthCard() {
             {error}
           </div>
         ) : null}
+      </div>
       </div>
     </div>
   );

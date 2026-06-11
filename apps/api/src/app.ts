@@ -46,7 +46,9 @@ import {
   getWalletEvents,
   saveAuthNonce,
   getAnalytics,
+  getBetaFeedback,
   getGovernanceVotersLeaderboard,
+  saveBetaFeedback,
 } from "./storage/repositories.js";
 import {
   createGovernanceProposal,
@@ -506,6 +508,60 @@ export function createSynoraApp() {
         proposals,
         rewardClaims,
       }),
+    });
+  });
+
+  app.get("/feedback/me", async (request, response) => {
+    const walletAddress = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!walletAddress) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    return response.json({
+      feedback: await getBetaFeedback(walletAddress),
+    });
+  });
+
+  app.post("/feedback", async (request, response) => {
+    const walletAddress = getAuthenticatedWallet(request.headers.authorization);
+
+    if (!walletAddress) {
+      return response.status(401).json({
+        error: "INVALID_TOKEN",
+      });
+    }
+
+    const schema = z
+      .object({
+        rating: z.number().int().min(1).max(5),
+        category: z.enum(["GENERAL", "ONBOARDING", "WALLET", "REWARDS"]),
+        comment: z.string().trim().min(3).max(1000),
+      })
+      .strict();
+    const parsed = schema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return response.status(400).json({
+        error: "INVALID_BETA_FEEDBACK",
+      });
+    }
+
+    const feedback = await saveBetaFeedback({
+      walletAddress,
+      ...parsed.data,
+    });
+
+    logger.info("beta.feedback.saved", {
+      walletAddress,
+      rating: feedback.rating,
+      category: feedback.category,
+    });
+
+    return response.json({
+      feedback,
     });
   });
 

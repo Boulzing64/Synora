@@ -137,6 +137,36 @@ export function getNotifications(token: string) {
   return getJson<NotificationsResponse>("/notifications", token);
 }
 
+export type BetaFeedbackCategory =
+  | "GENERAL"
+  | "ONBOARDING"
+  | "WALLET"
+  | "REWARDS";
+
+export type BetaFeedback = {
+  walletAddress: string;
+  rating: number;
+  category: BetaFeedbackCategory;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function getMyBetaFeedback(token: string) {
+  return getJson<{ feedback: BetaFeedback | null }>("/feedback/me", token);
+}
+
+export function submitBetaFeedback(
+  params: {
+    rating: number;
+    category: BetaFeedbackCategory;
+    comment: string;
+  },
+  token: string
+) {
+  return postJson<{ feedback: BetaFeedback }>("/feedback", params, token);
+}
+
 export function reportReputationEvent(
   params: {
     type: ReputationEventType;

@@ -108,10 +108,28 @@ const MIGRATIONS: Migration[] = [
         ON governance_proposals(status, created_at);
     `,
   },
+  {
+    version: "009",
+    name: "create_beta_feedback",
+    sql: `
+      CREATE TABLE IF NOT EXISTS beta_feedback (
+        wallet_address TEXT PRIMARY KEY REFERENCES users(wallet_address) ON DELETE CASCADE,
+        rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+        category TEXT NOT NULL,
+        comment TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_beta_feedback_updated
+        ON beta_feedback(updated_at DESC);
+    `,
+  },
 ];
 
 const memoryNonceStore = new Map<string, AuthNonceEntry>();
 const memoryReputationEventsStore = new Map<string, ReputationEvent[]>();
+const memoryBetaFeedbackStore = new Map<string, BetaFeedback>();
 
 let pool: PgPool | null = null;
 
@@ -203,6 +221,21 @@ export async function initializeDatabase() {
 
   console.log("SYNORA PostgreSQL storage initialized.");
 }
+
+export type BetaFeedbackCategory =
+  | "GENERAL"
+  | "ONBOARDING"
+  | "WALLET"
+  | "REWARDS";
+
+export type BetaFeedback = {
+  walletAddress: string;
+  rating: number;
+  category: BetaFeedbackCategory;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 async function ensureUser(walletAddress: string) {
   const normalizedWallet = getAddress(walletAddress);
@@ -865,5 +898,93 @@ export async function getGovernanceVotersLeaderboard(limit = 10) {
     totalWeight: Number(row.total_weight),
     lastVoteAt: new Date(row.last_vote_at).toISOString(),
   }));
+}
+
+function mapBetaFeedbackRow(row: any): BetaFeedback {
+  return {
+    walletAddress: String(row.wallet_address),
+    rating: Number(row.rating),
+    category: row.category as BetaFeedbackCategory,
+    comment: String(row.comment),
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString(),
+  };
+}
+
+export async function getBetaFeedback(walletAddress: string) {
+  const normalizedWallet = getAddress(walletAddress);
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return memoryBetaFeedbackStore.get(normalizedWallet) ?? null;
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT wallet_address, rating, category, comment, created_at, updated_at
+      FROM beta_feedback
+      WHERE wallet_address = $1
+      LIMIT 1
+    `,
+    [normalizedWallet]
+  );
+
+  return result.rows[0] ? mapBetaFeedbackRow(result.rows[0]) : null;
+}
+
+export async function saveBetaFeedback(params: {
+  walletAddress: string;
+  rating: number;
+  category: BetaFeedbackCategory;
+  comment: string;
+}) {
+  const normalizedWallet = await ensureUser(params.walletAddress);
+  const databasePool = getPool();
+  const now = new Date().toISOString();
+
+  if (!databasePool) {
+    const existing = memoryBetaFeedbackStore.get(normalizedWallet);
+    const feedback: BetaFeedback = {
+      walletAddress: normalizedWallet,
+      rating: params.rating,
+      category: params.category,
+      comment: params.comment,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+
+    memoryBetaFeedbackStore.set(normalizedWallet, feedback);
+    return feedback;
+  }
+
+  const result = await databasePool.query(
+    `
+      INSERT INTO beta_feedback(
+        wallet_address,
+        rating,
+        category,
+        comment,
+        created_at,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $5)
+      ON CONFLICT(wallet_address)
+      DO UPDATE SET
+        rating = EXCLUDED.rating,
+        category = EXCLUDED.category,
+        comment = EXCLUDED.comment,
+        updated_at = EXCLUDED.updated_at
+      RETURNING wallet_address, rating, category, comment, created_at, updated_at
+    `,
+    [
+      normalizedWallet,
+      params.rating,
+      params.category,
+      params.comment,
+      now,
+    ]
+  );
+
+  return mapBetaFeedbackRow(result.rows[0]);
 }
 

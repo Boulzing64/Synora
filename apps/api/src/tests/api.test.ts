@@ -89,6 +89,45 @@ assert.ok(
 );
 
 await request(app)
+  .post("/feedback")
+  .send({
+    rating: 5,
+    category: "ONBOARDING",
+    comment: "Excellent onboarding.",
+  })
+  .expect(401);
+
+await request(app)
+  .post("/feedback")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    rating: 8,
+    category: "ONBOARDING",
+    comment: "Invalid rating.",
+  })
+  .expect(400);
+
+const feedbackResponse = await request(app)
+  .post("/feedback")
+  .set("Authorization", `Bearer ${token}`)
+  .send({
+    rating: 5,
+    category: "ONBOARDING",
+    comment: "Excellent onboarding.",
+  })
+  .expect(200);
+
+assert.equal(feedbackResponse.body.feedback.rating, 5);
+assert.equal(feedbackResponse.body.feedback.walletAddress, account.address);
+
+const savedFeedbackResponse = await request(app)
+  .get("/feedback/me")
+  .set("Authorization", `Bearer ${token}`)
+  .expect(200);
+
+assert.equal(savedFeedbackResponse.body.feedback.category, "ONBOARDING");
+
+await request(app)
   .post("/reputation/event")
   .send({
     type: "SYN_BALANCE_CONNECTED",
