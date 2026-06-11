@@ -1,5 +1,6 @@
 ﻿import pg from "pg";
 import type { Pool as PgPool } from "pg";
+import crypto from "node:crypto";
 import { getAddress } from "viem";
 
 import {
@@ -125,11 +126,37 @@ const MIGRATIONS: Migration[] = [
         ON beta_feedback(updated_at DESC);
     `,
   },
+  {
+    version: "010",
+    name: "create_email_auth",
+    sql: `
+      CREATE TABLE IF NOT EXISTS email_accounts (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        wallet_address TEXT UNIQUE REFERENCES users(wallet_address) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS email_magic_links (
+        token_hash TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL REFERENCES email_accounts(id) ON DELETE CASCADE,
+        expires_at TIMESTAMPTZ NOT NULL,
+        consumed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_email_magic_links_expires
+        ON email_magic_links(expires_at);
+    `,
+  },
 ];
 
 const memoryNonceStore = new Map<string, AuthNonceEntry>();
 const memoryReputationEventsStore = new Map<string, ReputationEvent[]>();
 const memoryBetaFeedbackStore = new Map<string, BetaFeedback>();
+const memoryEmailAccounts = new Map<string, EmailAccount>();
+const memoryEmailMagicLinks = new Map<string, EmailMagicLink>();
 
 let pool: PgPool | null = null;
 
@@ -235,6 +262,21 @@ export type BetaFeedback = {
   comment: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type EmailAccount = {
+  id: string;
+  email: string;
+  walletAddress: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type EmailMagicLink = {
+  tokenHash: string;
+  accountId: string;
+  expiresAt: string;
+  consumedAt: string | null;
 };
 
 async function ensureUser(walletAddress: string) {
@@ -986,5 +1028,174 @@ export async function saveBetaFeedback(params: {
   );
 
   return mapBetaFeedbackRow(result.rows[0]);
+}
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function mapEmailAccountRow(row: any): EmailAccount {
+  return {
+    id: String(row.id),
+    email: String(row.email),
+    walletAddress: row.wallet_address ? String(row.wallet_address) : null,
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString(),
+  };
+}
+
+export async function getOrCreateEmailAccount(email: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    const existing = memoryEmailAccounts.get(normalizedEmail);
+    if (existing) return existing;
+
+    const now = new Date().toISOString();
+    const account: EmailAccount = {
+      id: crypto.randomUUID(),
+      email: normalizedEmail,
+      walletAddress: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    memoryEmailAccounts.set(normalizedEmail, account);
+    return account;
+  }
+
+  const result = await databasePool.query(
+    `
+      INSERT INTO email_accounts(id, email)
+      VALUES ($1, $2)
+      ON CONFLICT(email)
+      DO UPDATE SET updated_at = NOW()
+      RETURNING id, email, wallet_address, created_at, updated_at
+    `,
+    [crypto.randomUUID(), normalizedEmail]
+  );
+
+  return mapEmailAccountRow(result.rows[0]);
+}
+
+export async function saveEmailMagicLink(params: {
+  accountId: string;
+  tokenHash: string;
+  expiresAt: string;
+}) {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    memoryEmailMagicLinks.set(params.tokenHash, {
+      ...params,
+      consumedAt: null,
+    });
+    return;
+  }
+
+  await databasePool.query(
+    `
+      INSERT INTO email_magic_links(token_hash, account_id, expires_at)
+      VALUES ($1, $2, $3)
+    `,
+    [params.tokenHash, params.accountId, params.expiresAt]
+  );
+}
+
+export async function consumeEmailMagicLink(tokenHash: string) {
+  const databasePool = getPool();
+  const now = new Date();
+
+  if (!databasePool) {
+    const magicLink = memoryEmailMagicLinks.get(tokenHash);
+    if (
+      !magicLink ||
+      magicLink.consumedAt ||
+      now.getTime() > new Date(magicLink.expiresAt).getTime()
+    ) {
+      return null;
+    }
+
+    magicLink.consumedAt = now.toISOString();
+    return (
+      Array.from(memoryEmailAccounts.values()).find(
+        (account) => account.id === magicLink.accountId
+      ) ?? null
+    );
+  }
+
+  const result = await databasePool.query(
+    `
+      UPDATE email_magic_links
+      SET consumed_at = NOW()
+      WHERE token_hash = $1
+        AND consumed_at IS NULL
+        AND expires_at > NOW()
+      RETURNING account_id
+    `,
+    [tokenHash]
+  );
+  const accountId = result.rows[0]?.account_id;
+
+  if (!accountId) return null;
+
+  return getEmailAccountById(String(accountId));
+}
+
+export async function getEmailAccountById(accountId: string) {
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    return (
+      Array.from(memoryEmailAccounts.values()).find(
+        (account) => account.id === accountId
+      ) ?? null
+    );
+  }
+
+  const result = await databasePool.query(
+    `
+      SELECT id, email, wallet_address, created_at, updated_at
+      FROM email_accounts
+      WHERE id = $1
+      LIMIT 1
+    `,
+    [accountId]
+  );
+
+  return result.rows[0] ? mapEmailAccountRow(result.rows[0]) : null;
+}
+
+export async function linkEmailAccountWallet(
+  accountId: string,
+  walletAddress: string
+) {
+  const normalizedWallet = await ensureUser(walletAddress);
+  const databasePool = getPool();
+
+  if (!databasePool) {
+    const account = await getEmailAccountById(accountId);
+    if (!account) return null;
+
+    const updated: EmailAccount = {
+      ...account,
+      walletAddress: normalizedWallet,
+      updatedAt: new Date().toISOString(),
+    };
+    memoryEmailAccounts.set(account.email, updated);
+    return updated;
+  }
+
+  const result = await databasePool.query(
+    `
+      UPDATE email_accounts
+      SET wallet_address = $2, updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, email, wallet_address, created_at, updated_at
+    `,
+    [accountId, normalizedWallet]
+  );
+
+  return result.rows[0] ? mapEmailAccountRow(result.rows[0]) : null;
 }
 

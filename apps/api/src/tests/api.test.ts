@@ -72,6 +72,58 @@ assert.ok(verifyResponse.body.user.score > 0);
 
 const token = verifyResponse.body.token as string;
 
+const emailRequestResponse = await request(app)
+  .post("/auth/email/request")
+  .send({
+    email: "founder@synora.test",
+  })
+  .expect(200);
+
+assert.equal(emailRequestResponse.body.sent, true);
+assert.match(emailRequestResponse.body.magicLink, /\/connexion\?token=/);
+
+const emailMagicToken = new URL(emailRequestResponse.body.magicLink).searchParams.get(
+  "token"
+);
+assert.ok(emailMagicToken);
+
+const emailVerifyResponse = await request(app)
+  .post("/auth/email/verify")
+  .send({
+    token: emailMagicToken,
+  })
+  .expect(200);
+
+assert.equal(emailVerifyResponse.body.account.email, "founder@synora.test");
+
+await request(app)
+  .post("/auth/email/verify")
+  .send({
+    token: emailMagicToken,
+  })
+  .expect(401);
+
+const emailToken = emailVerifyResponse.body.token as string;
+
+const linkedEmailResponse = await request(app)
+  .post("/auth/email/link-wallet")
+  .set("Authorization", `Bearer ${emailToken}`)
+  .send({
+    walletToken: token,
+  })
+  .expect(200);
+
+assert.equal(linkedEmailResponse.body.account.walletAddress, account.address);
+
+await request(app)
+  .get("/auth/email/me")
+  .set("Authorization", `Bearer ${emailToken}`)
+  .expect(200)
+  .expect((response) => {
+    assert.equal(response.body.account.email, "founder@synora.test");
+    assert.equal(response.body.account.walletAddress, account.address);
+  });
+
 await request(app).get("/notifications").expect(401);
 
 const initialNotificationsResponse = await request(app)

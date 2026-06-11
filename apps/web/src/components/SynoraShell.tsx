@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { HelpWidget } from "@/components/HelpWidget";
+import { InstallPwaButton } from "@/components/InstallPwaButton";
 import { NotificationCenter } from "@/components/NotificationCenter";
 
 type SynoraShellProps = {
@@ -214,11 +215,20 @@ export function SynoraShell({
 
             <div className="ml-auto flex items-center gap-3">
               <Link
+                href="/connexion"
+                className="hidden rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-bold text-slate-300 transition hover:text-white md:block"
+              >
+                {locale === "en" ? "Sign in" : "Connexion"}
+              </Link>
+
+              <Link
                 href="/obtenir-syn"
                 className="hidden rounded-xl border border-cyan-400/20 bg-cyan-400/[0.06] px-4 py-2 text-xs font-bold text-cyan-200 transition hover:bg-cyan-400/10 sm:block"
               >
                 {locale === "en" ? "Join beta" : "Rejoindre la beta"}
               </Link>
+
+              <InstallPwaButton compact />
 
               <NotificationCenter locale={locale} />
 

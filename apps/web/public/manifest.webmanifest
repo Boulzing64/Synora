@@ -1,13 +1,36 @@
 {
-  "name": "SYNORA",
+  "id": "/",
+  "name": "SYNORA Intelligence Protocol",
   "short_name": "SYNORA",
-  "description": "Web3 reputation, rewards and AI assistant on Base Sepolia.",
-  "start_url": "/",
+  "description": "Reputation Web3, rewards et gouvernance intelligente sur Base.",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#020617",
-  "theme_color": "#22d3ee",
-  "orientation": "portrait",
+  "theme_color": "#050a14",
+  "orientation": "any",
+  "categories": ["finance", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Rewards",
+      "short_name": "Rewards",
+      "url": "/rewards",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Staking",
+      "short_name": "Staking",
+      "url": "/staking",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",

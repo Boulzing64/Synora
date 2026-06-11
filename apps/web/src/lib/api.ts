@@ -112,6 +112,41 @@ export function getAuthenticatedUser(token: string) {
   return getJson<AuthMeResponse>("/auth/me", token);
 }
 
+export type EmailAccount = {
+  id: string;
+  email: string;
+  walletAddress: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function requestEmailMagicLink(email: string) {
+  return postJson<{
+    sent: boolean;
+    expiresAt: string;
+    magicLink?: string;
+  }>("/auth/email/request", { email });
+}
+
+export function verifyEmailMagicLink(token: string) {
+  return postJson<{ token: string; account: EmailAccount }>(
+    "/auth/email/verify",
+    { token }
+  );
+}
+
+export function getEmailAccount(token: string) {
+  return getJson<{ account: EmailAccount }>("/auth/email/me", token);
+}
+
+export function linkEmailWallet(emailToken: string, walletToken: string) {
+  return postJson<{ account: EmailAccount }>(
+    "/auth/email/link-wallet",
+    { walletToken },
+    emailToken
+  );
+}
+
 export type SynoraNotificationKind =
   | "BETA_TRANSACTION_CONFIRMED"
   | "BETA_REWARD_READY"

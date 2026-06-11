@@ -19,6 +19,7 @@ import {
 } from "viem";
 import { z } from "zod";
 import { buildAuthMessage } from "./auth/messages.js";
+import { sendMagicLinkEmail } from "./auth/email.js";
 import {
   getBetaAnalytics,
   getBetaDistribution,
@@ -47,8 +48,13 @@ import {
   saveAuthNonce,
   getAnalytics,
   getBetaFeedback,
+  consumeEmailMagicLink,
+  getEmailAccountById,
+  getOrCreateEmailAccount,
   getGovernanceVotersLeaderboard,
+  linkEmailAccountWallet,
   saveBetaFeedback,
+  saveEmailMagicLink,
 } from "./storage/repositories.js";
 import {
   createGovernanceProposal,
@@ -137,13 +143,14 @@ export function createSynoraApp() {
     legacyHeaders: false,
   });
 
-  function getAuthenticatedWallet(authorizationHeader: string | undefined) {
-    if (!authorizationHeader?.startsWith("Bearer ")) {
-      return null;
-    }
+  const emailAuthRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
-    const token = authorizationHeader.slice("Bearer ".length);
-
+  function getWalletFromToken(token: string) {
     try {
       const payload = jwt.verify(token, jwtSecret, jwtOptions) as JwtPayload & {
         walletAddress?: string;
@@ -154,6 +161,39 @@ export function createSynoraApp() {
       }
 
       return getAddress(payload.walletAddress);
+    } catch {
+      return null;
+    }
+  }
+
+  function getAuthenticatedWallet(authorizationHeader: string | undefined) {
+    if (!authorizationHeader?.startsWith("Bearer ")) {
+      return null;
+    }
+
+    return getWalletFromToken(authorizationHeader.slice("Bearer ".length));
+  }
+
+  function getAuthenticatedEmailAccountId(
+    authorizationHeader: string | undefined
+  ) {
+    if (!authorizationHeader?.startsWith("Bearer ")) {
+      return null;
+    }
+
+    try {
+      const payload = jwt.verify(
+        authorizationHeader.slice("Bearer ".length),
+        jwtSecret,
+        jwtOptions
+      ) as JwtPayload & {
+        accountId?: string;
+        authType?: string;
+      };
+
+      return payload.authType === "email" && payload.accountId
+        ? payload.accountId
+        : null;
     } catch {
       return null;
     }
@@ -474,6 +514,162 @@ export function createSynoraApp() {
       distribution,
       program,
     });
+  });
+
+  app.post(
+    "/auth/email/request",
+    emailAuthRateLimit,
+    async (request, response) => {
+      const schema = z.object({
+        email: z.string().trim().email().max(254),
+      });
+      const parsed = schema.safeParse(request.body);
+
+      if (!parsed.success) {
+        return response.status(400).json({
+          error: "INVALID_EMAIL",
+        });
+      }
+
+      const account = await getOrCreateEmailAccount(parsed.data.email);
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const tokenHash = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      const magicLink = `${webOrigin}/connexion?token=${rawToken}`;
+
+      await saveEmailMagicLink({
+        accountId: account.id,
+        tokenHash,
+        expiresAt,
+      });
+
+      const delivered = await sendMagicLinkEmail({
+        email: account.email,
+        magicLink,
+      });
+
+      if (!delivered && process.env.NODE_ENV === "production") {
+        return response.status(503).json({
+          error: "EMAIL_PROVIDER_NOT_CONFIGURED",
+        });
+      }
+
+      return response.json({
+        sent: true,
+        expiresAt,
+        ...(process.env.NODE_ENV !== "production" ? { magicLink } : {}),
+      });
+    }
+  );
+
+  app.post("/auth/email/verify", async (request, response) => {
+    const schema = z.object({
+      token: z.string().regex(/^[a-f0-9]{64}$/),
+    });
+    const parsed = schema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return response.status(400).json({
+        error: "INVALID_MAGIC_LINK",
+      });
+    }
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(parsed.data.token)
+      .digest("hex");
+    const account = await consumeEmailMagicLink(tokenHash);
+
+    if (!account) {
+      return response.status(401).json({
+        error: "MAGIC_LINK_EXPIRED_OR_USED",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        sub: account.id,
+        accountId: account.id,
+        authType: "email",
+      },
+      jwtSecret,
+      {
+        expiresIn: "7d",
+        ...jwtOptions,
+      }
+    );
+
+    return response.json({
+      token,
+      account,
+    });
+  });
+
+  app.get("/auth/email/me", async (request, response) => {
+    const accountId = getAuthenticatedEmailAccountId(
+      request.headers.authorization
+    );
+
+    if (!accountId) {
+      return response.status(401).json({
+        error: "INVALID_EMAIL_TOKEN",
+      });
+    }
+
+    const account = await getEmailAccountById(accountId);
+
+    if (!account) {
+      return response.status(404).json({
+        error: "EMAIL_ACCOUNT_NOT_FOUND",
+      });
+    }
+
+    return response.json({ account });
+  });
+
+  app.post("/auth/email/link-wallet", async (request, response) => {
+    const accountId = getAuthenticatedEmailAccountId(
+      request.headers.authorization
+    );
+
+    if (!accountId) {
+      return response.status(401).json({
+        error: "INVALID_EMAIL_TOKEN",
+      });
+    }
+
+    const schema = z.object({
+      walletToken: z.string().min(20),
+    });
+    const parsed = schema.safeParse(request.body);
+    const walletAddress = parsed.success
+      ? getWalletFromToken(parsed.data.walletToken)
+      : null;
+
+    if (!walletAddress) {
+      return response.status(401).json({
+        error: "INVALID_WALLET_TOKEN",
+      });
+    }
+
+    try {
+      const account = await linkEmailAccountWallet(accountId, walletAddress);
+      return response.json({ account });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes("unique")
+      ) {
+        return response.status(409).json({
+          error: "WALLET_ALREADY_LINKED",
+        });
+      }
+
+      throw error;
+    }
   });
 
   app.get("/notifications", async (request, response) => {
